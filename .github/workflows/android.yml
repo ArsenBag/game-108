@@ -1,5 +1,6 @@
 # Сборка Android-приложения «108»: неподписанный AAB для Google Play (подписывается ключом загрузки вне GitHub)
-# и тестовый APK (отладочная подпись) — оба выкладываются в релиз «android-latest».
+# и тестовый APK (отладочная подпись) — выкладываются в релиз «android-latest».
+# Журнал сборки всегда выкладывается в релиз «android-log» (и при ошибке).
 name: Android
 on:
   push:
@@ -13,25 +14,26 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
-      - uses: android-actions/setup-android@v3
-      - run: npm ci
-      - name: Веб-часть приложения
-        run: node scripts/build-www.js && npx cap sync android
-      - name: Сборка AAB и тестового APK
-        working-directory: android
-        run: chmod +x gradlew && ./gradlew --no-daemon bundleRelease assembleDebug
+      - name: Сборка (журнал → build.log)
+        run: |
+          set -o pipefail
+          {
+            echo "== окружение"; node -v; npm -v; java -version 2>&1; echo "ANDROID_HOME=$ANDROID_HOME"; ls "$ANDROID_HOME" || true; ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools" || true
+            echo "== npm ci"; npm ci --no-audit --no-fund
+            echo "== www + cap sync"; node scripts/build-www.js && npx cap sync android
+            echo "== gradle"; cd android && chmod +x gradlew && ./gradlew --no-daemon --stacktrace bundleRelease assembleDebug
+          } 2>&1 | tee build.log
       - name: Релиз android-latest
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,3 +47,12 @@ jobs:
           gh release create android-latest 108-unsigned.aab 108-test.apk SHA256SUMS.txt --prerelease \
             --title "Android $VN ($VC) — последняя сборка" \
             --notes "Сборка из коммита ${GITHUB_SHA::7}. 108-test.apk — для установки на телефон напрямую (отладочная подпись). 108-unsigned.aab — для Google Play, подписывается ключом загрузки отдельно."
+      - name: Журнал сборки
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f build.log ] || echo "журнала нет: упал шаг до сборки" > build.log
+          tail -c 900000 build.log > build-tail.log
+          gh release delete android-log --yes --cleanup-tag || true
+          gh release create android-log build-tail.log --prerelease --title "Android: журнал последней сборки" --notes "Коммит ${GITHUB_SHA::7}, результат: ${{ job.status }}"

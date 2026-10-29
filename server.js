@@ -46,7 +46,7 @@ const server = http.createServer((req, res) => {
   if (url === '/health') { res.writeHead(200, { 'Content-Type': 'text/plain' }); return res.end('ok'); }
   const rel = path.normalize(url).replace(/^(\.\.[\/\\])+/, '');
   const top = rel.split(/[\/\\]/).filter(Boolean)[0];
-  const allowed = rel === '/108.html' || rel === '\\108.html' || rel === '/manifest.webmanifest' || rel === '\\manifest.webmanifest' || STATIC_DIRS.includes(top);
+  const allowed = ['108.html', 'manifest.webmanifest', 'privacy.html'].includes(rel.replace(/^[\/\\]+/, '')) || STATIC_DIRS.includes(top);
   const file = path.join(ROOT, rel);
   if (!allowed || !file.startsWith(ROOT)) { res.writeHead(404); return res.end('not found'); }
   fs.stat(file, (err, st) => {
@@ -92,7 +92,7 @@ function startGame(r) {
   if (r.players.filter(p => !p.isBot).length < 1 || r.players.length < 2) return;
   r.G = E.createGame({ players: r.players.map(p => ({ name: p.name, isBot: p.isBot, strategy: r.level })), mode: r.mode });
   E.startRound(r.G); r.lastActive = Date.now();
-  log('room', r.code, 'start', r.players.map(p => p.name + (p.isBot ? '(бот)' : '')).join(', '));
+  log('room', r.code, 'start', `людей: ${r.players.filter(p => !p.isBot).length}, ботов: ${r.players.filter(p => p.isBot).length}`);   // имена в журнал не пишем
   broadcastLobby(r); broadcastState(r); scheduleBots(r);
 }
 function nextRound(r) {
