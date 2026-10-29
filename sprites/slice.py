@@ -25,7 +25,9 @@ meta = {}
 for f in sorted(glob.glob(f'{SRC}/[mf]??.png')):
     cid = os.path.basename(f)[:-4]
     im = Image.open(f).convert('RGBA'); A = np.array(im); a = A[:, :, 3] > 8
-    rr = runs(a.sum(axis=1)); mid = [r for r in rr if 300 < r[0] < 700][0]; ysplit = (mid[0] + mid[1]) // 2
+    rs = a.sum(axis=1); rr = runs(rs); mids = [r for r in rr if 300 < r[0] < 700]
+    if mids: ysplit = (mids[0][0] + mids[0][1]) // 2
+    else: ysplit = 380 + int(np.argmin(rs[380:640]))     # ряды касаются (что-то «вылетает» из ячейки) — режем по самому пустому месту
     cells = []
     for y0, y1 in ((0, ysplit), (ysplit, A.shape[0])):
         band = a[y0:y1]; cs = band.sum(axis=0); cr = [r for r in runs(cs) if 100 < r[0] < 950]

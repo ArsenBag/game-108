@@ -43,7 +43,7 @@ body {
 }
 /* фон-сцена (чайхана ночью) поверх горошка; затемнение к центру, чтобы стол и карты читались */
 body.scene {
-  background-image: linear-gradient(rgba(16,40,50,.35), rgba(16,40,50,.55) 35%, rgba(16,40,50,.35)), url("art/bg.webp");
+  background-image: linear-gradient(rgba(16,40,50,.35), rgba(16,40,50,.55) 35%, rgba(16,40,50,.35)), var(--scene, url("art/bg.webp"));
   background-size: cover, cover; background-position: center, center bottom; background-attachment: fixed, fixed;
 }
 button { font-family: inherit; font-size: inherit; cursor: pointer; }
@@ -240,6 +240,72 @@ b.bump { display: inline-block; animation: bump .6s var(--bounce); color: var(--
 @keyframes lantern { from { opacity: .55; } to { opacity: 1; } }
 .app { position: relative; z-index: 1; }
 
+/* ---- живой стол: вспышки спецкарт, баннер партии, шкала опасности, реакции, куча биты ---- */
+.burst { position: fixed; z-index: 16; transform: translate(-50%, -50%); pointer-events: none; display: grid; place-items: center; text-align: center;
+  animation: burst-in 1.25s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.burst::before { content: ""; position: absolute; inset: -34px -46px; background: var(--c, var(--sun)); border: 4px solid var(--ink); z-index: -1;
+  clip-path: polygon(50% 0%, 61% 18%, 82% 6%, 78% 29%, 100% 32%, 84% 50%, 100% 68%, 78% 71%, 82% 94%, 61% 82%, 50% 100%, 39% 82%, 18% 94%, 22% 71%, 0% 68%, 16% 50%, 0% 32%, 22% 29%, 18% 6%, 39% 18%);
+  filter: drop-shadow(5px 5px 0 var(--ink)); animation: burst-spin 1.25s linear; }
+.burst b { font-family: var(--font-display); font-weight: 900; font-size: clamp(26px, 5vw, 44px); line-height: 1; color: #fff; -webkit-text-stroke: 2px var(--ink); text-shadow: 3px 3px 0 var(--ink); white-space: nowrap; }
+.burst small { display: block; font-family: var(--font-display); font-weight: 900; font-size: 16px; color: var(--ink); margin-top: 4px; }
+.burst.skip { --c: #4f7bd9; } .burst.take { --c: var(--berry); } .burst.chain { --c: #ff8c2b; } .burst.queen { --c: var(--sun); }
+.burst.eight { --c: #9b59b6; } .burst.ok { --c: var(--mint); } .burst.out { --c: var(--sun); } .burst.reset { --c: #2fa38a; } .burst.elim { --c: #e03c3c; }
+@keyframes burst-in { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.2) rotate(-25deg); } 18% { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(6deg); }
+  32% { transform: translate(-50%, -50%) scale(.95) rotate(-3deg); } 45% { transform: translate(-50%, -50%) scale(1.04) rotate(0deg); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -62%) scale(.9); } }
+@keyframes burst-spin { to { rotate: 12deg; } }
+.round-banner { position: fixed; z-index: 16; transform: translate(-50%, -50%); pointer-events: none; text-align: center; animation: banner 1.9s cubic-bezier(.2, 1.2, .4, 1) forwards; }
+.round-banner b { display: block; font-family: var(--font-display); font-weight: 900; font-size: clamp(34px, 7vw, 60px); color: var(--sun); -webkit-text-stroke: 2px var(--ink); text-shadow: 4px 4px 0 var(--ink); line-height: 1; }
+.round-banner small { display: inline-block; margin-top: 6px; font-weight: 800; font-size: 15px; color: var(--ink); background: var(--card); border: 3px solid var(--ink); border-radius: 999px; padding: 3px 12px; box-shadow: 3px 3px 0 var(--ink); }
+@keyframes banner { 0% { opacity: 0; transform: translate(-150%, -50%) skewX(-12deg); } 20% { opacity: 1; transform: translate(-50%, -50%) skewX(0); } 75% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(60%, -50%) skewX(10deg); } }
+.meter { width: 84px; height: 7px; border-radius: 99px; background: rgba(0,0,0,.35); border: 2px solid var(--ink); overflow: hidden; margin-top: 3px; }
+.meter i { display: block; height: 100%; background: linear-gradient(90deg, #8de3a5, #ffc93c 60%, #ff6b6b); background-size: 84px 100%; border-right: 2px solid var(--ink); transition: width .6s var(--bounce); }
+.meter.hot { animation: hot .6s ease-in-out infinite alternate; } @keyframes hot { to { box-shadow: 0 0 10px 2px #ff6b6b; } }
+.me-row .meter { width: 130px; } .me-row .meter i { background-size: 130px 100%; }
+.seat.out .ava-wrap, .me-row.out .ava-wrap { filter: grayscale(.85) brightness(.85); }
+.seat.out .name { text-decoration: line-through; opacity: .7; }
+.badge-last.gone { background: #888; animation: none; transform: translateX(-50%) rotate(-8deg); }
+.discard-slot { position: relative; }
+.discard-slot .card { position: absolute; left: 0; top: 0; transform: rotate(var(--r, 0deg)); }
+.discard-slot .card.under { filter: brightness(.92); box-shadow: 2px 2px 0 var(--ink); }
+.table { transition: box-shadow .4s; }
+.table.danger { animation: table-danger 1.1s ease-in-out infinite alternate; }
+.table.gold { box-shadow: inset 0 0 0 4px var(--ink), 0 0 0 4px var(--ink), 0 10px 0 4px var(--rim-dark), 0 14px 0 4px var(--ink), 0 0 40px 6px rgba(255,201,60,.55); }
+@keyframes table-danger { from { box-shadow: inset 0 0 0 4px var(--ink), 0 0 0 4px var(--ink), 0 10px 0 4px var(--rim-dark), 0 14px 0 4px var(--ink), 0 0 10px 2px rgba(255,107,107,.3); }
+  to { box-shadow: inset 0 0 0 4px var(--ink), 0 0 0 4px var(--ink), 0 10px 0 4px var(--rim-dark), 0 14px 0 4px var(--ink), 0 0 46px 10px rgba(255,107,107,.75); } }
+.emos { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.emo { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--ink); background: var(--card); padding: 0; overflow: hidden; box-shadow: 0 3px 0 var(--ink); transition: transform .12s var(--bounce); }
+.emo:hover { transform: translateY(-3px) scale(1.08); } .emo:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.emo i { display: block; width: 100%; height: 100%; background-repeat: no-repeat; font-style: normal; font-size: 20px; line-height: 34px; }
+.emo.cool { opacity: .45; pointer-events: none; }
+.rain { position: fixed; top: -20px; width: 10px; height: 14px; border: 2px solid var(--ink); border-radius: 2px; background: var(--c); z-index: 25; pointer-events: none; animation: rain var(--d) linear var(--dl) forwards; }
+@keyframes rain { to { transform: translate(var(--x), 110vh) rotate(var(--rot)); } }
+.pick-info { min-height: 38px; font-size: 13px; color: #4b4858; margin-top: 4px; }
+.pick-info b { color: var(--ink); }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+@media (max-width: 560px) { .opts { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .me-row { flex-wrap: wrap; row-gap: 4px; }
+  .me-row .emos { flex-basis: 100%; flex-wrap: nowrap; }
+  .emo { width: 34px; height: 34px; } .emo i { line-height: 28px; font-size: 17px; }
+}
+.scenes { display: flex; gap: 6px; flex-wrap: wrap; }
+.scene-btn { width: 74px; height: 46px; border-radius: 10px; border: 3px solid var(--ink); background: center / cover no-repeat; padding: 0; position: relative; box-shadow: 0 3px 0 var(--ink); }
+.scene-btn span { position: absolute; left: 0; right: 0; bottom: 0; font-size: 10px; font-weight: 800; color: #fff; background: rgba(29,26,46,.75); padding: 1px 0; }
+.scene-btn.on { outline: 4px solid var(--sun); outline-offset: 1px; }
+.scene-btn.rnd { background: repeating-linear-gradient(45deg, #ffc93c 0 8px, #ff6b6b 8px 16px); }
+.field .hint2 { font-size: 12px; color: #6b6878; margin-top: 2px; }
+.lore h3 { font-family: var(--font-display); font-size: 16px; margin: 16px 0 6px; }
+.lore p { margin: 0 0 8px; }
+.lore .legend { background: #fff3cf; border: 3px solid var(--ink); border-radius: 14px; padding: 10px 12px; box-shadow: 3px 3px 0 var(--ink); }
+.lore .tree { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; }
+.lore .tree span { background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 2px 9px; box-shadow: 2px 2px 0 var(--ink); }
+.lore .tree span.me { background: var(--sun); }
+.lore .src { font-size: 12px; color: #6b6878; }
+.tip { margin-top: 12px; font-size: 13px; background: #fff3cf; border: 2px dashed var(--ink); border-radius: 12px; padding: 7px 10px; }
+.winner { display: flex; align-items: center; gap: 14px; margin: 6px 0 12px; }
+.winner .ava-wrap { width: 110px; height: 124px; }
+.elim-list { margin: 0 0 10px; padding-left: 20px; font-size: 14px; }
+
 /* ---- летающие карты ---- */
 .fx { position: fixed; inset: 0; pointer-events: none; z-index: 15; }
 .fx .card, .fx .back { position: absolute; left: 0; top: 0; margin: 0; }
@@ -305,7 +371,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
 .points b { font-family: var(--font-display); }
 .start-ava { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
 .start-ava .ava-wrap { width: 58px; height: 65px; }
-.start-ava.pick { flex-wrap: wrap; gap: 4px; margin-bottom: 0; }
+.start-ava.pick { display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px; margin-bottom: 0; justify-items: center; }
+@media (max-width: 560px) { .start-ava.pick { grid-template-columns: repeat(5, 1fr); } }
 .pick-btn { padding: 4px 2px 0; border: 3px solid transparent; border-radius: 14px; background: transparent; cursor: pointer; transition: transform .15s var(--bounce), background .15s; }
 .pick-btn:hover { transform: translateY(-3px) scale(1.06); background: rgba(255,255,255,.5); }
 .pick-btn.on { background: var(--sun); border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
@@ -338,6 +405,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     <button class="btn small" id="btnLog">Журнал</button>
     <button class="btn small" id="btnScore">Счёт</button>
     <button class="btn small" id="btnRules">Правила</button>
+    <button class="btn small" id="btnLore">История</button>
     <button class="btn small" id="btnNew">Новая игра</button>
   </div>
   <div class="seats" id="seats"></div>
@@ -415,7 +483,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   // --- создание игры ------------------------------------------
   function createGame(opts) {
     const players = opts.players.map((p, i) => ({
-      id: i, name: p.name, isBot: !!p.isBot, strategy: p.strategy || 'pro', hand: [], score: 0,
+      id: i, name: p.name, isBot: !!p.isBot, strategy: p.strategy || 'pro', hand: [], score: 0, out: false,
     }));
     const seed = opts.seed == null ? (Math.random() * 2 ** 31) | 0 : opts.seed;
     return {
@@ -434,6 +502,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       finisher: null,         // кто выложил последнюю карту, но его карта ещё «действует» (6/7/К♥/туз) — партия не закончена
       finishCards: null,      // чем он закрыл (для подсчёта дам)
       aceTarget: false,       // текущий игрок «под тузом» вышедшего: может отбиться тузом или картой той же масти либо пропустить
+      mode: opts.mode === 'elim' ? 'elim' : 'classic',   // classic — первый, кто набрал 108, проиграл; elim — набравший 108 выбывает, играют до последнего
+      winner: null, eliminated: [],                      // elim: победитель и порядок выбывания
       lastRound: null, losers: null,
       history: [],
       log: [],
@@ -457,7 +527,18 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const t = top(state);
     return (t.rank === 'Q' && state.chosenSuit) ? state.chosenSuit : t.suit;
   }
-  function nextIdx(state, i) { return (i + 1) % state.players.length; }
+  // следующий игрок за столом; выбывшие (режим на выбывание) пропускаются
+  function nextIdx(state, i) {
+    const n = state.players.length;
+    for (let k = 1; k <= n; k++) { const j = (i + k) % n; if (!state.players[j].out) return j; }
+    return i;
+  }
+  function prevIdx(state, i) {
+    const n = state.players.length;
+    for (let k = 1; k <= n; k++) { const j = (i - k + n) % n; if (!state.players[j].out) return j; }
+    return i;
+  }
+  const activePlayers = state => state.players.filter(p => !p.out);
   function findInHand(p, id) { return p.hand.find(c => c.id === id); }
   function removeFromHand(p, id) {
     const i = p.hand.findIndex(c => c.id === id);
@@ -469,18 +550,20 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     state.round += 1;
     if (state.round > 1) {
       // сдаёт тот, у кого больше всего очков; при равенстве — прежний сдающий, если он среди лидеров
-      const mx = Math.max(...state.players.map(p => p.score));
-      const leaders = state.players.filter(p => p.score === mx).map(p => p.id);
+      const act = activePlayers(state);
+      const mx = Math.max(...act.map(p => p.score));
+      const leaders = act.filter(p => p.score === mx).map(p => p.id);
       state.dealer = leaders.includes(state.dealer) ? state.dealer : leaders[0];
     }
-    const n = state.players.length;
+    if (state.players[state.dealer].out) state.dealer = nextIdx(state, state.dealer);
+    const n = activePlayers(state).length;
     state.deck = shuffle(makeDeck(), () => rnd(state));
     state.discard = [];
     state.players.forEach(p => { p.hand = []; });
     state.chosenSuit = null; state.pending = null; state.mustCover = null;
     state.drawnCard = null; state.offerCard = null;
     state.finisher = null; state.finishCards = null; state.aceTarget = false;
-    state.lastRound = null; state.losers = null;
+    state.lastRound = null; state.losers = null; state.eliminatedNow = [];
     state.log = [];
     // по одной карте по кругу, начиная с игрока после сдающего; сдающему 4-я карта идёт на стол
     let seat = nextIdx(state, state.dealer);
@@ -785,6 +868,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     state.finisher = null; state.finishCards = null; state.aceTarget = false; state.pending = null;
     const results = state.players.map((p, i) => {
       let pts, note;
+      if (p.out) return { idx: i, pts: 0, before: p.score, after: p.score, reset: false, note: 'выбыл', hand: [], out: true };
       if (i === finisher) {
         const qs = finishingCards.filter(isQ);
         pts = qs.length ? -qs.reduce((s, c) => s + queenFinishValue(c), 0) : 0;
@@ -804,6 +888,25 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     });
     state.lastRound = { round: state.round, finisher, results };
     state.history.push(state.lastRound);
+    if (state.mode === 'elim') {
+      // режим на выбывание: набравшие 108 выходят из-за стола, остальные играют дальше
+      const now = state.players.filter(p => !p.out && p.score >= TARGET);
+      now.forEach(p => { p.out = true; p.outRound = state.round; state.eliminated.push(p.id); });
+      state.eliminatedNow = now.map(p => p.id);
+      now.forEach(p => log(state, `${p.name} набрал ${p.score} и выбывает!`, 'end'));
+      const left = activePlayers(state);
+      if (left.length <= 1) {
+        let w = left[0];
+        if (!w) {                                  // выбыли все сразу — побеждает тот, у кого меньше очков
+          w = now.slice().sort((a, b) => a.score - b.score)[0];
+          w.out = false; state.eliminated = state.eliminated.filter(id => id !== w.id);
+        }
+        state.winner = w.id;
+        state.losers = state.players.filter(p => p.id !== w.id).map(p => p.id);
+        state.phase = 'gameOver';
+      } else state.phase = 'roundEnd';
+      return state;
+    }
     const over = state.players.filter(p => p.score >= TARGET);
     if (over.length) {
       state.losers = over.map(p => p.id);
@@ -901,7 +1004,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     SUITS, RANKS, POINTS, SUIT_SYM, SUIT_RU, RANK_RU, TARGET, RESET_AT,
     createGame, startRound, legalMoves, playCard, chooseSuit, draw,
     acceptCounter, declineCounter, pass, finishWithQueens, botAction, STRATEGIES,
-    top, effSuit, cardName, canPlayOn, isQ, queenFinishValue, plural,
+    top, effSuit, cardName, canPlayOn, isQ, queenFinishValue, plural, nextIdx, prevIdx,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Engine108 = api;
@@ -1206,16 +1309,47 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   const CELLS = ['neutral', 'laugh', 'cry', 'angry', 'shocked', 'smug', 'worried', 'think'];
   // размеры ячеек (px) — из meta.json нарезки
   const META = {
-    m01: { w: 169, h: 256 }, m02: { w: 173, h: 256 }, m03: { w: 195, h: 256 }, m04: { w: 173, h: 256 },
-    m05: { w: 165, h: 256 }, m06: { w: 175, h: 256 }, m07: { w: 157, h: 256 },
-    f01: { w: 181, h: 256 }, f02: { w: 176, h: 256 }, f03: { w: 176, h: 256 }, f04: { w: 161, h: 256 },
-    f05: { w: 179, h: 256 }, f06: { w: 169, h: 256 },
+    m01: { w: 169, h: 256 }, m02: { w: 173, h: 256 }, m03: { w: 195, h: 256 }, m04: { w: 173, h: 256 }, m05: { w: 165, h: 256 },
+    m06: { w: 175, h: 256 }, m07: { w: 157, h: 256 }, m08: { w: 164, h: 256 }, m09: { w: 176, h: 256 }, m10: { w: 173, h: 256 },
+    m11: { w: 143, h: 256 }, m12: { w: 159, h: 256 }, m13: { w: 196, h: 256 }, m14: { w: 171, h: 256 }, m15: { w: 156, h: 256 },
+    f01: { w: 181, h: 256 }, f02: { w: 176, h: 256 }, f03: { w: 176, h: 256 }, f04: { w: 161, h: 256 }, f05: { w: 179, h: 256 },
+    f06: { w: 169, h: 256 }, f07: { w: 182, h: 256 }, f08: { w: 165, h: 256 }, f09: { w: 156, h: 256 }, f10: { w: 147, h: 256 },
   };
   const CHARS = Object.keys(META);
   const MALE = CHARS.filter(c => c[0] === 'm'), FEMALE = CHARS.filter(c => c[0] === 'f');
   const LABEL = {
     m01: 'Санжар', m02: 'Тимур', m03: 'Рустам', m04: 'Шерзод', m05: 'Азиз', m06: 'Бахтиёр', m07: 'Джавохир',
+    m08: 'Ильхом-ака', m09: 'Равшан', m10: 'MC Шох', m11: 'Фаррух', m12: 'Шавкат-ошпаз', m13: 'Алишер-полвон', m14: 'Турсун-бобо', m15: 'Дядя Вали',
     f01: 'Дильноза', f02: 'Камила', f03: 'Мадина', f04: 'Нигора', f05: 'Зухра', f06: 'Малика',
+    f07: 'Холида-опа', f08: 'Лола', f09: 'Гульнара', f10: 'Нилуфар',
+  };
+  // короткая история каждого героя (показывается при выборе и в лобби)
+  const BIO = {
+    m01: 'Студент-второкурсник. Играет между парами и верит, что следующая карта — его.',
+    m02: 'Барбер с андеркатом. Держит лицо, пока не прилетит семёрка.',
+    m03: 'Добрый великан из соседнего подъезда. Злится громко, прощает быстро.',
+    m04: 'Программист. Считает карты в уме — и всё равно берёт пять за короля.',
+    m05: 'Самый младший за столом. «Йуху-у!» — его боевой клич.',
+    m06: 'Дядя, который научил играть весь двор. Знает правила, которых нет в правилах.',
+    m07: 'Бариста и философ. Пучок, бородка и вечное «спокойно, всё под контролем».',
+    m08: 'Хозяин чайханы. Без пиалы за стол не садится, проиграв — расплёскивает.',
+    m09: 'Таксист. Довезёт до 108 быстрее всех — себя или вас.',
+    m10: 'Рэпер с цепью-пикой. Читает соперников, но не всегда карты.',
+    m11: 'Бизнесмен. Ставит на карты, как на акции, — и так же переживает.',
+    m12: 'Мастер плова. Плачет только над луком… и над пиковой дамой.',
+    m13: 'Борец кураша. Огромный, сильный и очень ранимый.',
+    m14: 'Аксакал. Говорят, играл в 108 ещё в монгольской юрте.',
+    m15: 'Старый шулер. Туз в рукаве — не метафора.',
+    f01: 'Отличница. Заказывает масть так, будто видит ваши карты.',
+    f02: 'Рыжая буря. Хохочет громче всех — особенно над вами.',
+    f03: 'Бухгалтер. Ведёт счёт точнее самой игры.',
+    f04: 'Капитан волейбольной команды. Ловит семёрки на лету.',
+    f05: 'Тихая и вежливая — до первой пиковой дамы.',
+    f06: 'Пришла «только посмотреть» тридцать лет назад и до сих пор не ушла.',
+    f07: 'Бабушка с золотым зубом. Тапок всегда наготове.',
+    f08: 'Блогерша. Снимает сторис каждого вашего штрафа.',
+    f09: 'Звезда любой свадьбы. Веер, серьги и смертельный взгляд.',
+    f10: 'Геймерша. Для неё 108 — просто ещё один рейтинг.',
   };
   // настроение → [ячейка, css-анимация тела]
   const MOOD = {
@@ -1244,7 +1378,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   const MOOD_RIG = {}; Object.keys(MOOD).forEach(k => { MOOD_RIG[k] = { cell: MOOD[k][0], anim: MOOD[k][1] }; });
 
   let REDUCED = false;
-  const api = { ok: true, CHARS, MALE, FEMALE, LABEL, CELLS, MOOD_RIG };
+  const api = { ok: true, CHARS, MALE, FEMALE, LABEL, BIO, CELLS, MOOD_RIG };
 
   function charOf(seed) {
     if (typeof seed === 'string' && META[seed]) return seed;
@@ -1341,8 +1475,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   const E = window.Engine108;
   const BOT_NAMES = [['Тимур', 0], ['Дильноза', 1], ['Рустам', 0], ['Камила', 1], ['Шерзод', 0], ['Мадина', 1], ['Азиз', 0], ['Нигора', 1]];
   // имена героев-спрайтов (бот всегда выглядит одинаково под своим именем)
-  const CHAR_NAMES = { m01: 'Санжар', m02: 'Тимур', m03: 'Рустам', m04: 'Шерзод', m05: 'Азиз', m06: 'Бахтиёр', m07: 'Джавохир',
-                       f01: 'Дильноза', f02: 'Камила', f03: 'Мадина', f04: 'Нигора', f05: 'Зухра', f06: 'Малика' };
+  const CHAR_NAMES = (window.Sprite108 && window.Sprite108.LABEL) || {};
   const STYLES_M = [0, 3, 4], STYLES_F = [1, 2, 5];
   const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let G = null, me = 0, botTimer = null, myName = 'Игрок';
@@ -1380,10 +1513,28 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   })();
 
   // ---------- настройки (запоминаются) ----------
-  const settings = { sound: true, level: 'pro' };
+  const settings = { sound: true, level: 'pro', mode: 'classic', bg: 'random', speed: 'normal' };
   try { Object.assign(settings, JSON.parse(localStorage.getItem('g108settings') || '{}')); } catch (e) {}
   function saveSettings() { try { localStorage.setItem('g108settings', JSON.stringify(settings)); } catch (e) {} }
   const LEVELS = [['greedy', 'Новичок'], ['eights', 'Обычный'], ['pro', 'Профи']];
+  const MODES = [['classic', 'Классика', 'Первый, кто набрал 108, проиграл.'], ['elim', 'На выбывание', 'Набравший 108 выходит из-за стола, играем до последнего.']];
+  const SPEEDS = [['normal', 'Спокойный'], ['fast', 'Быстрый']];
+  const SPD = () => settings.speed === 'fast' ? .6 : 1;
+  // места за столом (фоны SpriteCook)
+  const SCENES = [['chaikhana', 'Чайхана', 'art/bg.webp', 'art/bg_t.webp'], ['train', 'Поезд', 'art/bg_train.webp', 'art/bg_train_t.webp'],
+    ['yard', 'Махалля', 'art/bg_yard.webp', 'art/bg_yard_t.webp'], ['roof', 'Крыша', 'art/bg_roof.webp', 'art/bg_roof_t.webp'], ['yurt', 'Юрта', 'art/bg_yurt.webp', 'art/bg_yurt_t.webp']];
+  let sceneNow = null;
+  function applyScene(force) {
+    let id = settings.bg;
+    if (id === 'random' || !SCENES.some(x => x[0] === id)) {
+      if (sceneNow && !force) return;
+      const pool = SCENES.filter(x => x[0] !== sceneNow); id = pool[Math.floor(Math.random() * pool.length)][0];
+    }
+    sceneNow = id;
+    const sc = SCENES.find(x => x[0] === id);
+    const im = new Image(); im.onload = () => document.body.style.setProperty('--scene', `url("${sc[2]}")`); im.src = sc[2];
+    document.body.dataset.scene = id;
+  }
 
   // ---------- звуки: синтез WebAudio, без файлов ----------
   // ---------- звуки: настоящие записи карт (Kenney, CC0), интерфейсные звуки Kenney и мультяшные стингеры реакций (sfx/*.mp3) ----------
@@ -1489,6 +1640,18 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     m02: { evil: ['Ха, попался!'], smug: ['Легко'] },
     m04: { think: ['Хм, интересная позиция'], shocked: ['Не может быть!'] },
     m01: { excited: ['Ещё одна — и всё!'], sad: ['Ну вот опять…'] },
+    m08: { laugh: ['Вай, чай пролил!', 'Ха-ха, ещё пиалу!'], idle: ['Чай стынет, ходи!', 'Кому ещё чаю?'], smug: ['Чай и победа — вот жизнь'], cry: ['Мою чайхану закроют…'] },
+    f07: { angry: ['Сейчас тапком!', 'Ах ты, шайтан!'], idle: ['Внучок, ходи уже', 'Я в твои годы быстрее ходила'], laugh: ['Ой, уморил!'], smug: ['Бабушку не обманешь'] },
+    m09: { idle: ['Счётчик тикает!', 'Поехали уже!'], smug: ['Довезу до 108 с ветерком'], angry: ['Куда прёшь?!', 'Ты где права купил?!'], laugh: ['Вот это поворот!'] },
+    m10: { smug: ['Йо, это база', 'Флоу пошёл'], laugh: ['Ха, на биток!'], cry: ['Это не мой бит…'], evil: ['Лови панчлайн!'] },
+    m11: { worried: ['Акции падают…', 'Надо звонить юристу'], smug: ['Выгодная сделка', 'Инвестиция окупилась'], angry: ['Это рейдерский захват!'], idle: ['Время — деньги!'] },
+    f08: { laugh: ['Это в сторис!', 'Подписчики оценят!'], idle: ['Чат ждёт хода', 'Сделаю пока селфи'], smug: ['Лайк и подписка'], cry: ['Тушь потекла…'] },
+    m12: { smug: ['Как мой плов!', 'Пальчики оближешь'], cry: ['Это лук… просто лук'], idle: ['Плов остывает!'], angry: ['Кто трогал мой казан?!'] },
+    m13: { smug: ['Сила!', 'Полвон не сдаётся'], cry: ['Я не плачу, это пот'], angry: ['Полвон зол!'], evil: ['Бросок через бедро!'] },
+    f09: { smug: ['Королева стола', 'Завидуйте молча'], angry: ['Как вы смеете?!'], idle: ['Я не молодею, ходите'], laugh: ['Ой, не могу, ха-ха!'] },
+    m14: { smug: ['Мудрость не купишь'], idle: ['В юрте мы быстрее ходили', 'Терпение — золото'], laugh: ['Хе-хе, молодёжь'], think: ['108 бусин, 108 очков…'] },
+    f10: { smug: ['Изи', 'Скилл'], laugh: ['Гуд гейм!'], angry: ['Лаги!', 'Это баг!'], idle: ['Ты в АФК?'] },
+    m15: { smug: ['Чистая случайность', 'Совпадение, клянусь'], evil: ['Туз из ниоткуда'], worried: ['Я ничего не прятал!'], laugh: ['Хе-хе-хе'] },
   };
   function phraseFor(pid, mood) {
     const id = avatarSeeds[pid], own = CHAR_PHRASES[id] && CHAR_PHRASES[id][mood];
@@ -1516,9 +1679,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   const moodTimers = {};
   function baseMood(pid) {
     const p = G.players[pid];
+    if (p.out) return 'sad';
     if (ACTIVE.has(G.phase) && G.current === pid) return 'think';
     if (p.hand.length === 1 && G.phase === 'play') return 'excited';
     if (p.hand.length >= 9) return 'overwhelmed';
+    if (p.score >= 90) return 'nervous';
     return 'neutral';
   }
   function moodOf(pid) {
@@ -1555,13 +1720,42 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     el.style.left = (r.left + r.width / 2) + 'px'; el.style.top = (r.top + r.height * .3) + 'px';
     $('fx').appendChild(el); setTimeout(() => el.remove(), 1400);
   }
+  let lastBurstAt = 0, burstShift = 0;
+  function burst(text, kind, sub) {
+    if (REDUCED) return;
+    const r = rectOf('.table'); if (!r) return;
+    const now = performance.now(); burstShift = now - lastBurstAt < 500 ? (burstShift + 1) % 3 : 0; lastBurstAt = now;
+    const el = document.createElement('div');
+    el.className = 'burst ' + (kind || '');
+    el.innerHTML = `<div><b>${esc(text)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
+    el.style.left = (r.left + r.width / 2 + (burstShift ? (burstShift === 1 ? -1 : 1) * r.width * .22 : 0)) + 'px';
+    el.style.top = (r.top + r.height * (burstShift ? .32 : .46)) + 'px';
+    $('fx').appendChild(el); setTimeout(() => el.remove(), 1300);
+  }
+  function roundBanner(title, sub) {
+    if (REDUCED) return;
+    const r = rectOf('.table'); if (!r) return;
+    const el = document.createElement('div'); el.className = 'round-banner';
+    el.innerHTML = `<b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}`;
+    el.style.left = (r.left + r.width / 2) + 'px'; el.style.top = (r.top + r.height / 2) + 'px';
+    $('fx').appendChild(el); setTimeout(() => el.remove(), 2000);
+  }
+  function confettiRain(n) {
+    if (REDUCED) return;
+    const cols = ['#ffc93c', '#e03c3c', '#4f7bd9', '#2fa38a', '#ff6b6b', '#fff', '#9b59b6'];
+    for (let i = 0; i < (n || 90); i++) {
+      const el = document.createElement('i'); el.className = 'rain';
+      el.style.cssText = `left:${Math.random() * 100}vw;--c:${cols[i % cols.length]};--d:${(2.2 + Math.random() * 1.8).toFixed(2)}s;--dl:${(Math.random() * 1.2).toFixed(2)}s;--x:${Math.round((Math.random() - .5) * 160)}px;--rot:${Math.round(Math.random() * 900)}deg`;
+      document.body.appendChild(el); setTimeout(() => el.remove(), 5200);
+    }
+  }
   function shake(strength) { if (REDUCED) return; const a = $('app'); a.classList.remove('shake', 'shake-big'); void a.offsetWidth; a.classList.add(strength > 1 ? 'shake-big' : 'shake'); }
   // ---------- живой стол: боты болтают в паузах и меняют выражение лица ----------
   let lastActionAt = Date.now(), lastIdleAt = 0;
   setInterval(() => {
     if (!G || !ACTIVE.has(G.phase) || document.querySelector('.modal-bg') || dealing) return;
     const now = Date.now();
-    const bots = G.players.filter(p => p.isBot && !(moods[p.id] && moods[p.id].until > now));
+    const bots = G.players.filter(p => p.isBot && !p.out && !(moods[p.id] && moods[p.id].until > now));
     if (!bots.length) return;
     if (G.current === me && now - lastActionAt > 7000 && now - lastIdleAt > 9000) {        // человек задумался — боты подгоняют
       lastIdleAt = now;
@@ -1589,8 +1783,10 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const afterPending = G.pending, afterCover = G.mustCover;
     const roundOver = G.phase === 'roundEnd' || G.phase === 'gameOver';
     if (roundOver) { reactToRoundEnd(); return; }
+    if (G.chosenSuit && !b.chosenSuit && E.top(G).rank === 'Q') burst(`ЗАКАЗ ${E.SUIT_SYM[G.chosenSuit]}`, 'queen', E.SUIT_RU[G.chosenSuit]);
     if (played > 0 && G.finisher === actor && b.finisher == null) {          // вышел «действующей» картой — ещё не точно
       setTimeout(() => setMood(actor, 'excited', 3000, 'Я вышел! Кажется…'), 300);
+      setTimeout(() => burst('ВЫШЕЛ?!', 'out', 'карта действует'), 450);
     }
     if (G.finisher != null && G.current === G.finisher && (G.pending || G.aceTarget) && ACTIVE.has(G.phase)) {
       setTimeout(() => setMood(G.finisher, 'worried', 3000, G.pending ? 'Только не ко мне!' : 'Опять я?!'), 600);
@@ -1599,6 +1795,13 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       const c = G.discard[G.discard.length - 1];
       const isAttack = c.rank === '6' || c.rank === '7' || (c.rank === 'K' && c.suit === 'H');
       SFX.play('play'); if (c.rank === 'Q') SFX.play('queen'); else if (isAttack) SFX.play('penalty');
+      if (isAttack && G.pending) {
+        const cnt = G.pending.count || 1;
+        if (cnt >= 2) { burst(`ЦЕПОЧКА ×${cnt}`, 'chain', `бери ${G.pending.draws}!`); if (cnt >= 3) shake(1); }
+        else burst(c.rank === 'K' ? 'БЕРИ 5!' : `БЕРИ ${G.pending.draws}!`, 'take', c.rank === 'K' ? 'или отбей 9♥' : null);
+      } else if (c.rank === '9' && c.suit === 'H' && b.pending && b.pending.kind === 'K') burst('ОТБИЛ!', 'ok', '9♥ против короля');
+      else if (c.rank === 'A') burst(G.aceTarget ? 'ПОД ТУЗОМ!' : 'ПРОПУСК!', 'skip', G.aceTarget ? null : G.players[E.nextIdx(G, actor)] && `${G.players[E.nextIdx(G, actor)].name} отдыхает`);
+      else if (c.rank === '8' && afterCover && G.current === actor) burst('ПОКРОЙ!', 'eight', E.SUIT_SYM[afterCover]);
       if (isAttack && b.pending) {                 // отбился своей шестёркой/семёркой — и передал дальше
         setMood(actor, 'smug');
         setMood(G.current, 'worried', 2600, `Беру ${afterPending.draws}?!`);
@@ -1609,7 +1812,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
         setMood(actor, 'smug', 2800, 'Девятка червей!');
       } else if (c.rank === 'A') {
         setMood(actor, 'evil', 2600, 'Пропускаешь!');
-        const skipped = (actor + 1) % G.players.length;
+        const skipped = E.nextIdx(G, actor);
         if (skipped !== actor) setMood(skipped, 'annoyed');
       } else if (c.rank === 'Q') {
         setMood(actor, 'sly');
@@ -1629,8 +1832,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       const drew = p.hand.length - b.hands[i];
       if (drew <= 0) return;
       if (b.hands[i] === 0 && b.finisher === i) {                              // вышедшего вернули в игру
-        setMood(i, 'devastated', 4500, `Вернули! +${drew}`); popAt(i, `+${drew}`, 'bad'); shake(1);
-        G.players.forEach(q => { if (q.id !== i) setMood(q.id, 'laugh', 4000); });
+        setMood(i, 'devastated', 4500, `Вернули! +${drew}`); popAt(i, `+${drew}`, 'bad'); shake(1); burst('ВЕРНУЛИ!', 'take', `+${drew} — снова в игре`);
+        G.players.forEach(q => { if (q.id !== i && !q.out) setMood(q.id, 'laugh', 4000); });
         return;
       }
       for (let k = 0; k < Math.min(drew, 6); k++) setTimeout(() => SFX.play('draw', { minGap: 0 }), k * 90);
@@ -1640,9 +1843,9 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
         const mood = drew <= 1 ? 'pout' : drew <= 3 ? 'sad' : drew <= 5 ? 'cry' : 'devastated';
         setMood(i, mood, drew >= 4 ? 4500 : 3200, `Беру ${drew}… ` + PHRASES[mood][Math.floor(Math.random() * PHRASES[mood].length)]);
         // обидчик злорадствует, а при большом штрафе смеётся весь стол
-        const prev = (i - 1 + G.players.length) % G.players.length;
+        const prev = E.prevIdx(G, i);
         G.players.forEach(q => {
-          if (q.id === i) return;
+          if (q.id === i || q.out) return;
           if (drew >= 4) {
             setMood(q.id, q.id === prev ? 'evil' : 'laugh', 4000, q.id === prev ? 'Ха-ха-ха!' : undefined);
           }
@@ -1671,7 +1874,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     else if (r.finisher === me) SFX.play('win');
     else if (mine && mine.pts >= 12) SFX.play('lose');
     else SFX.play('shove');
+    const fr = r.results.find(x => x.idx === r.finisher);
+    if (fr) burst(fr.pts < 0 ? `ДАМА ${fr.pts}!` : 'ЗАКРЫЛ!', 'out', G.players[r.finisher].name);
+    if (r.results.some(x => x.reset)) setTimeout(() => burst('107 → 0!', 'reset', 'счёт обнулён'), 900);
+    (G.eliminatedNow || []).forEach((id, k) => setTimeout(() => { burst('ВЫБЫВАЕТ!', 'elim', `${G.players[id].name} · ${G.players[id].score}`); shake(2); }, 1100 + k * 900));
     r.results.forEach(res => {
+      if (res.out) return;
       if (res.pts) setTimeout(() => popAt(res.idx, (res.pts > 0 ? '+' : '−') + Math.abs(res.pts), res.pts > 0 ? 'bad' : 'good'), 250);
       if (res.reset) setMood(res.idx, 'reset', 60000);
       else if (res.idx === r.finisher) setMood(res.idx, 'party', 60000, res.pts < 0 ? `Закрыл на даму: ${res.pts}!` : undefined);
@@ -1680,11 +1888,18 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       else if (res.pts > 0) setMood(res.idx, 'sad', 60000, `+${res.pts}`);
       else setMood(res.idx, 'relief', 60000);
     });
+    (G.eliminatedNow || []).forEach(id => setMood(id, 'devastated', 60000, 'Мои 108… я вне игры'));
     if (G.phase === 'gameOver') {
-      G.players.forEach(p => {
-        if (G.losers.includes(p.id)) setMood(p.id, 'cry', 60000, '108… я проиграл');
-        else setMood(p.id, 'win', 60000);
-      });
+      if (G.mode === 'elim' && G.winner != null) {
+        G.players.forEach(p => { if (p.id === G.winner) setMood(p.id, 'win', 60000, 'Я последний за столом!'); else if (!p.out || (G.eliminatedNow || []).includes(p.id)) setMood(p.id, 'cry', 60000); });
+        if (G.winner === me) confettiRain(110);
+      } else {
+        G.players.forEach(p => {
+          if (G.losers.includes(p.id)) setMood(p.id, 'cry', 60000, '108… я проиграл');
+          else setMood(p.id, 'win', 60000);
+        });
+        if (!G.losers.includes(me)) confettiRain(90);
+      }
     }
   }
 
@@ -1707,6 +1922,39 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   }
 
   const prevScores = {};
+  const outW = () => 'вне игры';
+  const ptsW = n => { const a = Math.abs(n) % 100, b = a % 10; return `${n} ${a > 10 && a < 20 ? 'очков' : b === 1 ? 'очко' : b >= 2 && b <= 4 ? 'очка' : 'очков'}`; };
+  function meterHTML(score) {
+    const pct = Math.min(100, Math.round(score / 108 * 100));
+    return `<div class="meter ${score >= 90 ? 'hot' : ''}" title="${score} из 108"><i style="width:${pct}%"></i></div>`;
+  }
+  // лёгкий наклон карт в бите — всегда одинаковый для одной карты
+  function tilt(c, isTop) { let h = 0; for (const ch of c.id) h = (h * 31 + ch.charCodeAt(0)) | 0; h = Math.abs(h); return isTop ? (h % 7) - 3 : (h % 25) - 12; }
+  // кнопки-реакции: лицо вашего героя с нужной эмоцией
+  const EMOS = [['laugh', 1, 'Ха-ха!', '😂'], ['smug', 5, 'Изи!', '😏'], ['angry', 3, 'Грр!', '😡'], ['shocked', 4, 'Что?!', '😱'], ['cry', 2, 'За что?!', '😭']];
+  let emoCoolUntil = 0;
+  function emosHTML() {
+    if (!G || G.phase === 'gameOver') return '';
+    const id = typeof avatarSeeds[me] === 'string' ? avatarSeeds[me] : null;
+    const cool = Date.now() < emoCoolUntil ? 'cool' : '';
+    return `<div class="emos" aria-label="Реакции">${EMOS.map(([m, cell, , em]) => `<button class="emo ${cool}" data-emo="${m}" title="${m === 'laugh' ? 'Посмеяться' : m === 'smug' ? 'Похвастаться' : m === 'angry' ? 'Разозлиться' : m === 'shocked' ? 'Удивиться' : 'Поплакать'}">${id && useSprites()
+      ? `<i style="background-image:url('sprites/${id}.webp');background-size:800% auto;background-position:${(cell * 100 / 7).toFixed(3)}% 12%"></i>` : `<i>${em}</i>`}</button>`).join('')}</div>`;
+  }
+  const EMO_REPLY = { laugh: ['annoyed', 'angry', 'laugh'], smug: ['annoyed', 'sly', 'evil'], angry: ['laugh', 'smug', 'shocked'], shocked: ['laugh', 'sly'], cry: ['laugh', 'evil', 'relief'] };
+  function sendEmo(mood) {
+    if (!G || Date.now() < emoCoolUntil) return;
+    emoCoolUntil = Date.now() + 1500;
+    const e = EMOS.find(x => x[0] === mood);
+    setMood(me, mood, 2600, e ? e[2] : undefined);
+    setTimeout(() => render(), 1550);
+    if (NET.online) { NET.send({ t: 'emote', mood }); return; }
+    // боты отвечают на вашу реакцию
+    const bots = G.players.filter(p => p.isBot && !p.out);
+    if (bots.length && Math.random() < .7) {
+      const b = bots[Math.floor(Math.random() * bots.length)], pool = EMO_REPLY[mood] || ['meh'];
+      setTimeout(() => setMood(b.id, pool[Math.floor(Math.random() * pool.length)], 2600), 650 + Math.random() * 500);
+    }
+  }
   function render() {
     if (!G) return;
     const lm = E.legalMoves(G);
@@ -1715,14 +1963,15 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
 
     // соперники
     $('seats').innerHTML = G.players.filter(p => p.id !== me).map(p => `
-      <div class="seat ${G.current === p.id && ACTIVE.has(G.phase) ? 'active' : ''}" data-pid="${p.id}">
+      <div class="seat ${G.current === p.id && ACTIVE.has(G.phase) ? 'active' : ''} ${p.out ? 'out' : ''}" data-pid="${p.id}">
         <div class="bubble" data-bubble="${p.id}"></div>
         ${avatar(avatarSeeds[p.id], moodOf(p.id))}
         ${p.id === G.dealer ? '<div class="badge-d" title="Сдаёт">сдаёт</div>' : ''}
-        ${p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : (G.finisher === p.id && ACTIVE.has(G.phase) ? '<div class="badge-last out">вышел?</div>' : '')}
+        ${p.out ? `<div class="badge-last gone">${outW(p.id)}</div>` : p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : (G.finisher === p.id && ACTIVE.has(G.phase) ? '<div class="badge-last out">вышел?</div>' : '')}
         <div class="name">${esc(p.name)}</div>
         <div class="fan" ${dealing ? 'style="visibility:hidden"' : ''}>${Array.from({ length: Math.min(p.hand.length, 12) }, () => '<div class="mini back"></div>').join('')}</div>
-        <div class="meta"><span><b>${p.hand.length}</b> ${E.plural(p.hand.length)}</span><span>счёт <b class="${prevScores[p.id] !== undefined && prevScores[p.id] !== p.score ? 'bump' : ''}">${p.score}</b></span></div>
+        <div class="meta">${p.out ? '' : `<span><b>${p.hand.length}</b> ${E.plural(p.hand.length)}</span>`}<span>счёт <b class="${prevScores[p.id] !== undefined && prevScores[p.id] !== p.score ? 'bump' : ''}">${p.score}</b></span></div>
+        ${meterHTML(p.score)}
       </div>`).join('');
 
     // колода и стол
@@ -1734,7 +1983,10 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     deckEl.setAttribute('aria-label', lm.drawLabel);
     $('deckLbl').textContent = `колода · ${G.deck.length}`;
     const t = E.top(G);
-    $('discard').innerHTML = cardHTML(t, '', 'tabindex="-1"');
+    const pile = G.discard.slice(-3);
+    $('discard').innerHTML = pile.map((c, i) => cardHTML(c, i < pile.length - 1 ? 'under' : '', `tabindex="-1" style="--r:${tilt(c, i === pile.length - 1)}deg"`)).join('');
+    const tbl = document.querySelector('.table');
+    if (tbl) { tbl.classList.toggle('danger', !!(G.pending && ACTIVE.has(G.phase))); tbl.classList.toggle('gold', !!(t.rank === 'Q' && G.chosenSuit && !G.pending && ACTIVE.has(G.phase))); }
     $('discardLbl').textContent = `бито · ${dlen(G)}`;
 
     // статус
@@ -1757,7 +2009,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
 
     // вы
     const p = G.players[me];
-    $('meRow').innerHTML = `<div class="me-ava"><div class="bubble" data-bubble="${me}"></div>${avatar(avatarSeeds[me], moodOf(me))}${me === G.dealer ? '<div class="badge-d">сдаёте</div>' : ''}${p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : ''}</div><div><div class="name">${esc(p.name)}</div><div class="meta">счёт <b class="${prevScores[me] !== undefined && prevScores[me] !== p.score ? 'bump' : ''}">${p.score}</b> · до 108 осталось <b>${Math.max(0, 108 - p.score)}</b></div></div>`;
+    $('meRow').classList.toggle('out', !!p.out);
+    $('meRow').innerHTML = `<div class="me-ava"><div class="bubble" data-bubble="${me}"></div>${avatar(avatarSeeds[me], moodOf(me))}${me === G.dealer && !p.out ? '<div class="badge-d">сдаёте</div>' : ''}${p.out ? '<div class="badge-last gone">выбыли</div>' : p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : ''}</div><div><div class="name">${esc(p.name)}</div><div class="meta">счёт <b class="${prevScores[me] !== undefined && prevScores[me] !== p.score ? 'bump' : ''}">${p.score}</b> · ${p.out ? 'вы выбыли — смотрите, кто победит' : `до 108 осталось <b>${Math.max(0, 108 - p.score)}</b>`}</div>${meterHTML(p.score)}</div>${emosHTML()}`;
     G.players.forEach(q => { prevScores[q.id] = q.score; });
     const hand = p.hand.slice().sort((a, b) => order(a) - order(b));
     const legal = new Set(myTurn && G.phase === 'play' ? lm.cards : []);
@@ -1794,6 +2047,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   function fly(from, to, face, opts) {
     if (REDUCED || !from || !to) return Promise.resolve();
     const o = Object.assign({ dur: 420, delay: 0, rot: 0 }, opts || {});
+    o.dur *= SPD(); o.delay *= SPD();
     const el = document.createElement('div');
     el.innerHTML = face ? cardHTML(face, '', 'tabindex="-1"') : '<div class="back"></div>';
     const node = el.firstElementChild;
@@ -1813,7 +2067,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const handRects = {};
     document.querySelectorAll('#hand .card').forEach(el => { handRects[el.dataset.id] = el.getBoundingClientRect(); });
     return {
-      current: G.current, discard: dlen(G), round: G.round, finisher: G.finisher,
+      current: G.current, discard: dlen(G), round: G.round, finisher: G.finisher, chosenSuit: G.chosenSuit,
       pending: G.pending, mustCover: G.mustCover,
       hands: G.players.map(p => p.hand.length),
       deck: rectOf('#deck'), disc: rectOf('#discard'), handRects, seats: G.players.map(p => seatRect(p.id)),
@@ -1845,12 +2099,14 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     Object.keys(moods).forEach(k => delete moods[k]);
     dealing = true; render();
     const deck = rectOf('#deck'), flights = [];
-    const n = G.players.length;
-    let seat = (G.dealer + 1) % n, k = 0;
+    const n = G.players.filter(p => !p.out).length;
+    let seat = E.nextIdx(G, G.dealer), k = 0;
+    const act = G.players.filter(p => !p.out).length;
+    roundBanner(`Партия ${G.round}`, `сдаёт ${G.players[G.dealer].name}${G.mode === 'elim' ? ` · за столом ${act}` : ''}`);
     for (let c = 0; c < 4 * n; c++) {
-      setTimeout(() => SFX.play('deal', { minGap: 0, vol: .7 }), k * 55);
+      setTimeout(() => SFX.play('deal', { minGap: 0, vol: .7 }), k * 55 * SPD());
       flights.push(fly(deck, seatRect(seat), null, { delay: k++ * 55, dur: 360, rot: -25 }));
-      seat = (seat + 1) % n;
+      seat = E.nextIdx(G, seat);
     }
     const opener = E.top(G);
     $('discard').style.visibility = 'hidden';
@@ -1919,14 +2175,30 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   function showRoundModal() {
     if (!G || G.phase !== 'roundEnd' || document.querySelector('.modal-bg[data-kind="round"]')) return;
     const fin = G.players[G.lastRound.finisher];
+    const gone = (G.eliminatedNow || []).map(id => G.players[id].name);
     const bg = modal(`<h2>Партия ${G.round} закончена — закрыл ${esc(fin.name)}</h2>
-      <table class="score"><thead><tr><th>Игрок</th><th>На руках</th><th>Очки</th><th>Счёт</th></tr></thead><tbody>${scoreRows(G.lastRound.results)}</tbody></table>
+      ${gone.length ? `<p class="net-err">Выбывает из-за стола: ${esc(gone.join(', '))}. За столом остаются ${G.players.filter(p => !p.out).length}.</p>` : ''}
+      <table class="score"><thead><tr><th>Игрок</th><th>На руках</th><th>Очки</th><th>Счёт</th></tr></thead><tbody>${scoreRows(G.lastRound.results.filter(x => !x.out || (G.eliminatedNow || []).includes(x.idx)))}</tbody></table>
+      <div class="tip"><b>А вы знали?</b> ${esc(TIPS[(G.round * 7 + G.players.length) % TIPS.length])}</div>
       <div class="row"><button class="btn primary" data-act="next">Следующая партия</button></div>`, true);
+    if (G.players[me].out && !NET.online) setTimeout(() => { const nb = bg.querySelector('[data-act=next]'); if (nb && document.body.contains(nb)) nb.click(); }, 2600 * SPD());
     bg.dataset.kind = 'round';
     bg.querySelector('[data-act=next]').onclick = () => { if (NET.online) { closeModal(); NET.send({ t: 'next' }); return; } closeModal(); E.startRound(G); lastHandIds = new Set(); saveGame(); SFX.play('shuffle'); animateDeal().then(scheduleBots); };
   }
   function showGameOverModal() {
     if (!G || G.phase !== 'gameOver' || document.querySelector('.modal-bg[data-kind="over"]')) return;
+    if (G.mode === 'elim' && G.winner != null) {
+      const w = G.players[G.winner], iWon = G.winner === me;
+      const order = G.eliminated.map((id, k) => `<li><b>${esc(G.players[id].name)}</b> — партия ${G.players[id].outRound}, ${ptsW(G.players[id].score)}</li>`).join('');
+      const bg = modal(`<h2 class="big">${iWon ? 'Вы последний за столом!' : esc(w.name) + ' побеждает!'}</h2>
+        <div class="winner">${avatar(avatarSeeds[G.winner], 'party')}<p>${iWon ? 'Все остальные перебрали свои 108. Стол ваш.' : `Последний за столом — ${esc(w.name)}, ${ptsW(w.score)}.`}</p></div>
+        <h3 style="margin:4px 0 6px;font-family:var(--font-display)">Порядок выбывания</h3><ol class="elim-list">${order}</ol>
+        <div class="row"><button class="btn" data-act="hist">История партий</button><button class="btn primary" data-act="new">Новая игра</button></div>`, true);
+      bg.dataset.kind = 'over';
+      bg.querySelector('[data-act=new]').onclick = () => { if (NET.online) { NET.send({ t: 'newGame' }); closeModal(); } else showStart(); };
+      bg.querySelector('[data-act=hist]').onclick = showScoreModal;
+      return;
+    }
     const losers = G.losers.map(i => G.players[i].name).join(' и ');
     const iLost = G.losers.includes(me);
     const many = G.losers.length > 1;
@@ -1956,6 +2228,36 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       <div class="row"><button class="btn primary" data-act="close">Закрыть</button></div>`);
     document.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
   }
+  const TIPS = [
+    'Девятка стоит 0 очков — её не страшно оставить на руках.',
+    'Туз стоит 11 очков: избавляйтесь от тузов пораньше.',
+    'Закрыть партию пиковой дамой — минус 40 очков.',
+    'Вдвоём туз возвращает ход вам: туз, туз, восьмёрка, дама — и партия ваша.',
+    'Последняя карта — шестёрка? Партия не закончена, пока штраф не возьмёт кто-то другой.',
+    'Ровно 107 обнуляет счёт. Одна бусина до конца — и всё сначала.',
+    'Немецкая родственница «108» — Mau-Mau: её правила впервые напечатали в 1958 году.',
+    'В Чехии похожую игру зовут Prší — «дождь».',
+    'UNO — дальний родственник «108»: его придумали в 1971 году.',
+    'В 108 бусин собраны буддийские чётки — отсюда, по легенде, и число игры.',
+    'Турсун-бобо утверждает, что играл в 108 в монгольской юрте. Мы не спорим.',
+    'Король червей отбивается только девяткой червей — берегите её.',
+    'Восьмёрку надо покрыть сразу: мастью, дамой или другой восьмёркой.',
+  ];
+  function showLoreModal(back) {
+    modal(`<h2>История «108»</h2><div class="lore">
+      <div class="tree"><span>Crazy Eights</span>→<span>Mau-Mau</span>→<span>Чешский дурак · Фараон · 101</span>→<span class="me">108</span></div>
+      <h3>Семья «сбрасывалок»</h3>
+      <p>«108» — из большой семьи игр, где побеждает тот, кто первым избавится от карт. Её родственники — американские Crazy Eights («сумасшедшие восьмёрки»), немецкая Mau-Mau и фирменная UNO, придуманная в 1971 году.</p>
+      <h3>Из Германии — во двор</h3>
+      <p>Игра Mau-Mau появилась в Германии вскоре после Второй мировой: правила впервые напечатали в 1958-м, а к 1961-му она уже была очень популярна. В Чехии её родню зовут Prší — «дождь».</p>
+      <p>В СССР игра разошлась под именами «Чешский дурак», «Фараон», «Крокодил» и «101». Играли колодой в 36 карт: шестёрка и семёрка заставляют брать, туз пропускает ход, дама заказывает масть, а закрыть партию дамой — минус 20, пиковой — минус 40. Проигрывал тот, кто перебрал 101 очко. «108» — прямой потомок этих правил.</p>
+      <h3>А почему 108?</h3>
+      <p>Точной истории никто не записал. Одна из немногих находок — пост 2011 года в ЖЖ: автору показали «монгольскую игру 108», где набравший больше 108 выбывает, а остальные играют дальше. Отсюда наш режим «На выбывание».</p>
+      <div class="legend"><b>Легенда стола.</b> В Монголии, Тибете и Индии 108 — священное число: столько бусин в буддийских чётках. Говорят, в степи считали очки бусинами — кто «перебрал чётки», тот выходил из круга. А ровно 107 — бусина до конца, и всё начинается заново.</div>
+      <p class="src" style="margin-top:12px">Источники: Википедия (Mau-Mau, 101), правила «101» на dic.academic.ru, запись «Карточная игра 108» в ЖЖ (2011). Легенда — наша, для настроения.</p>
+      </div><div class="row"><button class="btn primary" data-act="close">Понятно</button></div>`);
+    document.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
+  }
   function showRulesModal(back) {
     modal(`<h2>Правила «108»</h2><div class="rules">
       <h3>Раздача</h3><ul><li>Колода 36 карт, каждому по 4. Сдающий берёт 3, его четвёртая карта открывает стол и действует сразу: туз — первый игрок пропускает ход, 6/7/король червей — штраф первому, дама — сдающий заказывает масть, восьмёрка — первый игрок её покрывает.</li><li>Первую партию сдаёт последний за столом, дальше — тот, у кого больше всего очков.</li></ul>
@@ -1980,6 +2282,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
         <li><b>Король червей:</b> следующий берёт 5 или отбивается 9♥ — в обоих случаях партия закончена.</li>
         <li><b>Туз:</b> тот, кого «кинули», может вместо пропуска отбиться тузом или картой той же масти. Игра идёт, пока ход не дойдёт до вышедшего: со штрафом или «под тузом» — он берёт и возвращается, иначе он вышел.</li>
       </ul>
+      <h3>Режим «На выбывание»</h3><ul><li>Кто набрал 108 и больше, выходит из-за стола, а остальные играют дальше. Побеждает последний оставшийся. Если выбыли все сразу — побеждает тот, у кого меньше очков.</li></ul>
       <h3>Игра</h3><ul><li>Партия заканчивается, когда кто-то выложил последнюю карту. Очки копятся. Кто набрал 108 и больше — проиграл; если таких несколько, проигрывают все. Ровно 107 — счёт обнуляется.</li></ul>
       </div><div class="row"><button class="btn primary" data-act="close">Понятно</button></div>`);
     document.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
@@ -1988,25 +2291,42 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     let n = 3;
     try { n = parseInt(localStorage.getItem('g108n')) || 3; } catch (e) {}
     const PREVIEW = ['party', 'evil', 'cry', 'sly', 'shocked', 'angry', 'laugh', 'think', 'worried', 'smug', 'devastated', 'relief', 'excited'];
+    const segs = (id, list, cur) => `<div class="seg" id="${id}">${list.map(([k, t]) => `<button class="${k === cur ? 'on' : ''}" data-v="${k}">${t}</button>`).join('')}</div>`;
+    const info = c => c && SP ? `<b>${esc(SP.LABEL[c])}.</b> ${esc(SP.BIO[c] || '')}` : 'Не выбран — герой будет случайным.';
     const bg = modal(`<h2 class="big">108</h2>
       ${useSprites()
-        ? `<div class="field"><label>Ваш герой</label><div class="start-ava pick" id="pick">${SP.CHARS.map((c, i) => `<button class="pick-btn ${c === myChar ? 'on' : ''}" data-char="${c}" title="${SP.LABEL[c]}">${avatar(c, PREVIEW[i % PREVIEW.length])}</button>`).join('')}</div></div>`
+        ? `<div class="field"><label>Ваш герой</label><div class="start-ava pick" id="pick">${SP.CHARS.map((c, i) => `<button class="pick-btn ${c === myChar ? 'on' : ''}" data-char="${c}" title="${SP.LABEL[c]}">${avatar(c, PREVIEW[i % PREVIEW.length])}</button>`).join('')}</div><div class="pick-info" id="pickInfo">${info(myChar)}</div></div>`
         : `<div class="start-ava">${[['party',0],['evil',1],['cry',2],['sly',3],['shocked',4],['angry',5]].map(([m,i]) => avatar(i, m)).join('')}</div>`}
-      <p>Карточная игра на 36 карт, от 2 до 6 игроков. Кто наберёт 108 очков — проиграл.</p>
+      <p>Карточная игра на 36 карт, от 2 до 6 игроков. Кто наберёт 108 очков — проиграл. <a href="#" data-act="lore">Откуда взялась «108»?</a></p>
       <div class="field"><label for="nameInput">Ваше имя</label><input id="nameInput" value="${esc(myName)}" maxlength="16"></div>
-      <div class="field"><label>Игроков за столом</label><div class="seg" id="seg">${[2, 3, 4, 5, 6].map(k => `<button class="${k === n ? 'on' : ''}" data-n="${k}">${k}</button>`).join('')}</div></div>
-      <div class="field"><label>Сила ботов</label><div class="seg" id="lvl">${LEVELS.map(([k, t]) => `<button class="${k === settings.level ? 'on' : ''}" data-lvl="${k}">${t}</button>`).join('')}</div></div>
+      <div class="opts">
+        <div class="field"><label>Игроков за столом</label>${segs('seg', [2, 3, 4, 5, 6].map(k => [k, k]), n)}</div>
+        <div class="field"><label>Сила ботов</label>${segs('lvl', LEVELS, settings.level)}</div>
+        <div class="field"><label>Режим</label>${segs('mode', MODES, settings.mode)}<div class="hint2" id="modeHint">${MODES.find(m => m[0] === settings.mode)[2]}</div></div>
+        <div class="field"><label>Темп</label>${segs('spd', SPEEDS, settings.speed)}</div>
+      </div>
+      <div class="field"><label>Место</label><div class="scenes" id="scenes"><button class="scene-btn rnd ${settings.bg === 'random' ? 'on' : ''}" data-bg="random"><span>Случайно</span></button>${SCENES.map(([k, t, , th]) => `<button class="scene-btn ${settings.bg === k ? 'on' : ''}" data-bg="${k}" style="background-image:url('${th}')"><span>${t}</span></button>`).join('')}</div></div>
       <div class="row"><button class="btn" data-act="rules">Правила</button>${NET.available ? '<button class="btn" data-act="online">🌐 С друзьями</button>' : ''}<button class="btn primary" data-act="start">Сдать карты</button></div>`);
     const onl = bg.querySelector('[data-act=online]'); if (onl) onl.onclick = () => { myName = bg.querySelector('#nameInput').value.trim() || 'Игрок'; try { localStorage.setItem('g108name', myName); } catch (e) {} showOnlineModal(); };
-    bg.querySelectorAll('#seg button').forEach(b => b.onclick = () => { n = +b.dataset.n; bg.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x === b)); });
-    bg.querySelectorAll('#lvl button').forEach(b => b.onclick = () => { settings.level = b.dataset.lvl; saveSettings(); bg.querySelectorAll('#lvl button').forEach(x => x.classList.toggle('on', x === b)); });
+    const segOn = (id, fn) => bg.querySelectorAll(`#${id} button`).forEach(b => b.onclick = () => { bg.querySelectorAll(`#${id} button`).forEach(x => x.classList.toggle('on', x === b)); fn(b.dataset.v); });
+    segOn('seg', v => { n = +v; });
+    segOn('lvl', v => { settings.level = v; saveSettings(); });
+    segOn('mode', v => { settings.mode = v; saveSettings(); bg.querySelector('#modeHint').textContent = MODES.find(m => m[0] === v)[2]; });
+    segOn('spd', v => { settings.speed = v; saveSettings(); });
+    bg.querySelectorAll('#scenes .scene-btn').forEach(b => b.onclick = () => { bg.querySelectorAll('#scenes .scene-btn').forEach(x => x.classList.toggle('on', x === b)); settings.bg = b.dataset.bg; saveSettings(); applyScene(true); });
     bg.querySelector('[data-act=rules]').onclick = () => showRulesModal(showStart);
-    bg.querySelectorAll('.pick-btn').forEach(b => b.onclick = () => {
-      const same = b.classList.contains('on');
-      bg.querySelectorAll('.pick-btn').forEach(x => x.classList.remove('on'));
-      myChar = same ? null : b.dataset.char;            // повторный клик — снова случайный герой
-      if (!same) b.classList.add('on');
-      try { if (myChar) localStorage.setItem('g108char', myChar); else localStorage.removeItem('g108char'); } catch (e) {}
+    bg.querySelector('[data-act=lore]').onclick = e => { e.preventDefault(); showLoreModal(showStart); };
+    bg.querySelectorAll('.pick-btn').forEach(b => {
+      b.onclick = () => {
+        const same = b.classList.contains('on');
+        bg.querySelectorAll('.pick-btn').forEach(x => x.classList.remove('on'));
+        myChar = same ? null : b.dataset.char;            // повторный клик — снова случайный герой
+        if (!same) b.classList.add('on');
+        const pi = bg.querySelector('#pickInfo'); if (pi) pi.innerHTML = info(myChar);
+        try { if (myChar) localStorage.setItem('g108char', myChar); else localStorage.removeItem('g108char'); } catch (e) {}
+      };
+      b.onmouseenter = () => { const pi = bg.querySelector('#pickInfo'); if (pi) pi.innerHTML = info(b.dataset.char); };
+      b.onmouseleave = () => { const pi = bg.querySelector('#pickInfo'); if (pi) pi.innerHTML = info(myChar); };
     });
     if (useSprites()) SP.preload(null, () => { closeModal(); showStart(); });
     bg.querySelector('[data-act=start]').onclick = () => {
@@ -2037,6 +2357,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       if (m.t === 'joined') { api.online = true; api.room = m.room; api.token = m.token; api.pid = m.pid; wantRoom = m.room; saveSess(); setStatus(''); history.replaceState(null, '', '?room=' + m.room); }
       else if (m.t === 'lobby') { api.lobby = m; if (!m.started) showLobbyModal(m); else { const lb = document.querySelector('.modal-bg[data-kind="lobby"]'); if (lb) closeModal(); } }
       else if (m.t === 'state') { onState(m); }
+      else if (m.t === 'emote') { if (G && m.pid !== me && G.players[m.pid]) { const e = EMOS.find(x => x[0] === m.mood); setMood(m.pid, m.mood, 2600, e ? e[2] : undefined); } }
       else if (m.t === 'error') { if (!api.online && onJoinErr) onJoinErr(m.msg); else setStatus(m.msg); if (!api.online) { api.token = null; saveSess(); } }
     }
     function setStatus(t) { const el = $('netStatus'); if (el) { el.textContent = t; el.hidden = !t; } }
@@ -2051,6 +2372,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const prev = G, b = prev ? snap() : null;
     G = m.G; me = m.me; avatarSeeds = m.seeds; lastActionAt = Date.now();
     if (SP) SP.preload(avatarSeeds, () => render()); SFX.preload();
+    if (!prev) applyScene(true);
     if (!prev || !b || G.round !== b.round) { Object.keys(moods).forEach(k => delete moods[k]); closeModal(); lastHandIds = new Set(); SFX.play('shuffle'); animateDeal(); return; }
     closeModal(); render(); reactToDiff(b); animateDiff(b);
   }
@@ -2078,7 +2400,9 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       <div class="field"><label>Ссылка для друзей</label><div class="linkrow"><input id="linkInput" readonly value="${esc(link)}"><button class="btn small" data-act="copy">Копировать</button></div></div>
       <div class="lobby">${l.players.map(p => `<div class="lp ${p.online ? '' : 'off'}">${avatar(p.char, p.host ? 'smug' : 'neutral')}<div class="lp-name">${esc(p.name)}${p.host ? ' <span class="badge">хозяин</span>' : ''}${p.isBot ? ' <span class="badge bot">бот</span>' : ''}${!p.online ? ' <span class="badge off">нет связи</span>' : ''}</div>${host && p.isBot ? `<button class="btn small" data-rm="${p.pid}">убрать</button>` : ''}</div>`).join('')}
         ${l.players.length < 6 && host ? '<button class="lp add" data-act="bot">+ бот</button>' : ''}</div>
-      ${host ? `<div class="field"><label>Сила ботов</label><div class="seg" id="lvl">${LEVELS.map(([k, t]) => `<button class="${k === l.level ? 'on' : ''}" data-lvl="${k}">${t}</button>`).join('')}</div></div>` : `<p class="note">Ждём, пока хозяин комнаты начнёт игру…</p>`}
+      ${host ? `<div class="opts"><div class="field"><label>Сила ботов</label><div class="seg" id="lvl">${LEVELS.map(([k, t]) => `<button class="${k === l.level ? 'on' : ''}" data-lvl="${k}">${t}</button>`).join('')}</div></div>
+        <div class="field"><label>Режим</label><div class="seg" id="lmode">${MODES.map(([k, t]) => `<button class="${k === (l.mode || 'classic') ? 'on' : ''}" data-mode="${k}">${t}</button>`).join('')}</div></div></div>`
+        : `<p class="note">Режим: <b>${(MODES.find(m => m[0] === (l.mode || 'classic')) || MODES[0])[1]}</b>. Ждём, пока хозяин комнаты начнёт игру…</p>`}
       <div class="row"><button class="btn" data-act="leave">Выйти</button>${host ? `<button class="btn primary" data-act="start" ${l.players.length < 2 ? 'disabled' : ''}>Начать (${l.players.length})</button>` : ''}</div>`;
     const bg = existing ? (existing.querySelector('.modal').innerHTML = html, existing) : modal(html);
     bg.dataset.kind = 'lobby';
@@ -2088,6 +2412,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const ab = bg.querySelector('[data-act=bot]'); if (ab) ab.onclick = () => NET.send({ t: 'addBot' });
     bg.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => NET.send({ t: 'removeBot', pid: +b.dataset.rm }));
     bg.querySelectorAll('#lvl button').forEach(b => b.onclick = () => NET.send({ t: 'level', level: b.dataset.lvl }));
+    bg.querySelectorAll('#lmode button').forEach(b => b.onclick = () => NET.send({ t: 'mode', mode: b.dataset.mode }));
   }
 
   // ---------- игра ----------
@@ -2106,8 +2431,9 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     } else {
       for (let i = 1; i < n; i++) players.push({ name: names[i - 1][0], isBot: true, strategy: settings.level });
     }
-    G = E.createGame({ players });
+    G = E.createGame({ players, mode: settings.mode });
     me = 0;
+    applyScene(true);
     if (sprites) {
       avatarSeeds = seeds;
       SP.preload(avatarSeeds, () => render());
@@ -2137,7 +2463,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     if (!G || NET.online) return;
     const p = G.players[G.current];
     if (!ACTIVE.has(G.phase) || !p.isBot) return;
-    botTimer = setTimeout(() => { act(() => E.botAction(G)).then(scheduleBots); }, G.phase === 'play' ? 800 : 500);
+    botTimer = setTimeout(() => { act(() => E.botAction(G)).then(scheduleBots); }, (G.phase === 'play' ? 800 : 500) * SPD());
   }
 
   // ---------- события ----------
@@ -2155,6 +2481,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   $('deck').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); deckClick(); } });
   $('btnScore').onclick = () => G && showScoreModal();
   $('btnRules').onclick = () => showRulesModal();
+  $('btnLore').onclick = () => showLoreModal();
+  $('meRow').addEventListener('click', e => { const b = e.target.closest('[data-emo]'); if (b) sendEmo(b.dataset.emo); });
   $('btnNew').onclick = () => { if (NET.online) { if (confirm('Выйти из онлайн-комнаты?')) { NET.leave(); showStart(); } } else showStart(); };
   $('btnLog').onclick = () => G && showLogModal();
   const syncSoundBtn = () => { $('btnSound').textContent = settings.sound ? '🔊' : '🔇'; $('btnSound').title = settings.sound ? 'Звук включён' : 'Звук выключен'; };

@@ -5,11 +5,13 @@
    Запуск: node server.js   (порт — переменная PORT, по умолчанию 3108)
    Протокол (JSON):
      клиент → сервер: {t:'join', room, name, char, token}   — войти в комнату (room пустой → создать)
-                      {t:'addBot'} {t:'removeBot', pid} {t:'level', level} {t:'start'} {t:'next'}
+                      {t:'addBot'} {t:'removeBot', pid} {t:'level', level} {t:'mode', mode} {t:'start'} {t:'next'}
+                      {t:'emote', mood}                     — реакция лицом героя (не чаще раза в 1.2 с)
                       {t:'act', a:'play'|'draw'|'pass'|'suit'|'accept'|'decline'|'queens', card, suit}
                       {t:'leave'} {t:'ping'}
      сервер → клиент: {t:'joined', room, token, pid}
-                      {t:'lobby', room, players:[{pid,name,char,isBot,online,host}], level, host, started}
+                      {t:'lobby', room, players:[{pid,name,char,isBot,online,host}], level, mode, host, started}
+                      {t:'emote', pid, mood}
                       {t:'state', G:<состояние для этого игрока>, me, seeds, names, phase}
                       {t:'error', msg} {t:'pong'}
    ============================================================ */
@@ -26,9 +28,12 @@ const ROOT = __dirname;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json', '.webp': 'image/webp', '.png': 'image/png',
   '.mp3': 'audio/mpeg', '.css': 'text/css', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.md': 'text/plain; charset=utf-8' };
 const STATIC_DIRS = ['art', 'sprites', 'sfx'];
-const CHARS = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'f01', 'f02', 'f03', 'f04', 'f05', 'f06'];
 const CHAR_NAMES = { m01: 'Санжар', m02: 'Тимур', m03: 'Рустам', m04: 'Шерзод', m05: 'Азиз', m06: 'Бахтиёр', m07: 'Джавохир',
-  f01: 'Дильноза', f02: 'Камила', f03: 'Мадина', f04: 'Нигора', f05: 'Зухра', f06: 'Малика' };
+  m08: 'Ильхом-ака', m09: 'Равшан', m10: 'MC Шох', m11: 'Фаррух', m12: 'Шавкат-ошпаз', m13: 'Алишер-полвон', m14: 'Турсун-бобо', m15: 'Дядя Вали',
+  f01: 'Дильноза', f02: 'Камила', f03: 'Мадина', f04: 'Нигора', f05: 'Зухра', f06: 'Малика', f07: 'Холида-опа', f08: 'Лола', f09: 'Гульнара', f10: 'Нилуфар' };
+const CHARS = Object.keys(CHAR_NAMES);
+const MODES = new Set(['classic', 'elim']);
+const EMOTES = new Set(['laugh', 'smug', 'angry', 'shocked', 'cry']);
 const LEVELS = new Set(['greedy', 'eights', 'pro']);
 const MAX_PLAYERS = 6;
 
@@ -55,13 +60,13 @@ const rooms = new Map();            // code → room
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 function code() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 4; i++) s += A[crypto.randomInt(A.length)]; return rooms.has(s) ? code() : s; }
 function makeRoom() {
-  const r = { code: code(), players: [], level: 'pro', G: null, botTimer: null, created: Date.now(), lastActive: Date.now() };
+  const r = { code: code(), players: [], level: 'pro', mode: 'classic', G: null, botTimer: null, created: Date.now(), lastActive: Date.now() };
   rooms.set(r.code, r); log('room', r.code, 'created'); return r;
 }
 // игрок: {pid, name, char, isBot, token, ws|null, online}
 function send(ws, msg) { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }
 function lobbyMsg(r) {
-  return { t: 'lobby', room: r.code, level: r.level, started: !!r.G,
+  return { t: 'lobby', room: r.code, level: r.level, mode: r.mode, started: !!r.G,
     players: r.players.map((p, i) => ({ pid: i, name: p.name, char: p.char, isBot: p.isBot, online: p.isBot || !!(p.ws && p.ws.readyState === 1), host: i === hostIdx(r) })) };
 }
 function hostIdx(r) { const i = r.players.findIndex(p => !p.isBot && p.ws && p.ws.readyState === 1); return i < 0 ? r.players.findIndex(p => !p.isBot) : i; }
@@ -83,7 +88,7 @@ function broadcastState(r) {
 }
 function startGame(r) {
   if (r.players.filter(p => !p.isBot).length < 1 || r.players.length < 2) return;
-  r.G = E.createGame({ players: r.players.map(p => ({ name: p.name, isBot: p.isBot, strategy: r.level })) });
+  r.G = E.createGame({ players: r.players.map(p => ({ name: p.name, isBot: p.isBot, strategy: r.level })), mode: r.mode });
   E.startRound(r.G); r.lastActive = Date.now();
   log('room', r.code, 'start', r.players.map(p => p.name + (p.isBot ? '(бот)' : '')).join(', '));
   broadcastLobby(r); broadcastState(r); scheduleBots(r);
@@ -170,6 +175,11 @@ wss.on('connection', ws => {
     if (m.t === 'addBot') { if (isHost) addBot(r); }
     else if (m.t === 'removeBot') { if (isHost && !r.G && r.players[m.pid] && r.players[m.pid].isBot) { r.players.splice(m.pid, 1); broadcastLobby(r); } }
     else if (m.t === 'level') { if (isHost && LEVELS.has(m.level)) { r.level = m.level; broadcastLobby(r); } }
+    else if (m.t === 'mode') { if (isHost && !r.G && MODES.has(m.mode)) { r.mode = m.mode; broadcastLobby(r); } }
+    else if (m.t === 'emote') {
+      const p = r.players[pid], now = Date.now();
+      if (r.G && p && EMOTES.has(m.mood) && !(p.emoteAt > now - 1200)) { p.emoteAt = now; r.players.forEach(q => send(q.ws, { t: 'emote', pid, mood: m.mood })); }
+    }
     else if (m.t === 'start') { if (isHost && !r.G) startGame(r); }
     else if (m.t === 'next') { if (r.G && r.G.phase === 'roundEnd') nextRound(r); }
     else if (m.t === 'newGame') { if (isHost && r.G && r.G.phase === 'gameOver') { r.G = null; broadcastLobby(r); } }

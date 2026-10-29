@@ -236,3 +236,38 @@ let fin=0; for(let i=0;i<500;i++){ const g=E.createGame({players:[{name:'a',isBo
 t('11 симуляция 500 партий',fin===500);
 if (fail) { console.log('окно выхода: ошибок', fail); process.exit(1); } console.log('окно выхода: ' + ok + ' проверок — ок');
 })();
+
+// ---- режим на выбывание ----
+(function () {
+  const E = require('./engine108.js');
+  let ok = 0, fail = 0; const t = (n, c) => { if (c) ok++; else { fail++; console.log('FAIL', n); } };
+  // 1: выбывший пропускается в очереди хода и раздаче
+  const G = E.createGame({ players: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }], mode: 'elim', seed: 5 });
+  G.players[1].out = true;
+  t('next пропускает выбывшего', E.nextIdx(G, 0) === 2 && E.prevIdx(G, 2) === 0);
+  E.startRound(G);
+  t('выбывшему не раздают', G.players[1].hand.length === 0 && G.players.filter(p => !p.out).reduce((s, p) => s + p.hand.length, 0) === 11);
+  // 2: игры ботов в режиме на выбывание доходят до одного победителя
+  let games = 0, okWin = 0, maxRounds = 0;
+  for (let g = 0; g < 300; g++) {
+    const n = 2 + (g % 5);
+    const S = E.createGame({ players: Array.from({ length: n }, (_, i) => ({ name: 'P' + i, isBot: true, strategy: ['greedy', 'eights', 'pro'][i % 3] })), mode: 'elim', seed: 1000 + g });
+    let rounds = 0;
+    while (S.phase !== 'gameOver' && rounds < 200) {
+      E.startRound(S); rounds++; let steps = 0;
+      // выбывшим не раздают
+      if (S.players.some(p => p.out && p.hand.length)) { fail++; console.log('FAIL у выбывшего карты'); break; }
+      while (S.phase !== 'roundEnd' && S.phase !== 'gameOver' && steps < 4000) {
+        if (S.players[S.current].out) { fail++; console.log('FAIL ход у выбывшего'); break; }
+        E.botAction(S); steps++;
+      }
+      if (steps >= 4000) break;
+    }
+    games++; maxRounds = Math.max(maxRounds, rounds);
+    const alive = S.players.filter(p => !p.out);
+    if (S.phase === 'gameOver' && S.winner != null && alive.length === 1 && alive[0].id === S.winner && S.eliminated.length === n - 1) okWin++;
+  }
+  t('все игры на выбывание доиграны до одного победителя', okWin === games);
+  if (fail) { console.log('выбывание: ошибок', fail); process.exit(1); }
+  console.log('выбывание: ' + games + ' игр, у всех один победитель (до ' + maxRounds + ' партий) — ок');
+})();

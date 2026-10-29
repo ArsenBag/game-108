@@ -51,7 +51,7 @@
   // --- создание игры ------------------------------------------
   function createGame(opts) {
     const players = opts.players.map((p, i) => ({
-      id: i, name: p.name, isBot: !!p.isBot, strategy: p.strategy || 'pro', hand: [], score: 0,
+      id: i, name: p.name, isBot: !!p.isBot, strategy: p.strategy || 'pro', hand: [], score: 0, out: false,
     }));
     const seed = opts.seed == null ? (Math.random() * 2 ** 31) | 0 : opts.seed;
     return {
@@ -70,6 +70,8 @@
       finisher: null,         // кто выложил последнюю карту, но его карта ещё «действует» (6/7/К♥/туз) — партия не закончена
       finishCards: null,      // чем он закрыл (для подсчёта дам)
       aceTarget: false,       // текущий игрок «под тузом» вышедшего: может отбиться тузом или картой той же масти либо пропустить
+      mode: opts.mode === 'elim' ? 'elim' : 'classic',   // classic — первый, кто набрал 108, проиграл; elim — набравший 108 выбывает, играют до последнего
+      winner: null, eliminated: [],                      // elim: победитель и порядок выбывания
       lastRound: null, losers: null,
       history: [],
       log: [],
@@ -93,7 +95,18 @@
     const t = top(state);
     return (t.rank === 'Q' && state.chosenSuit) ? state.chosenSuit : t.suit;
   }
-  function nextIdx(state, i) { return (i + 1) % state.players.length; }
+  // следующий игрок за столом; выбывшие (режим на выбывание) пропускаются
+  function nextIdx(state, i) {
+    const n = state.players.length;
+    for (let k = 1; k <= n; k++) { const j = (i + k) % n; if (!state.players[j].out) return j; }
+    return i;
+  }
+  function prevIdx(state, i) {
+    const n = state.players.length;
+    for (let k = 1; k <= n; k++) { const j = (i - k + n) % n; if (!state.players[j].out) return j; }
+    return i;
+  }
+  const activePlayers = state => state.players.filter(p => !p.out);
   function findInHand(p, id) { return p.hand.find(c => c.id === id); }
   function removeFromHand(p, id) {
     const i = p.hand.findIndex(c => c.id === id);
@@ -105,18 +118,20 @@
     state.round += 1;
     if (state.round > 1) {
       // сдаёт тот, у кого больше всего очков; при равенстве — прежний сдающий, если он среди лидеров
-      const mx = Math.max(...state.players.map(p => p.score));
-      const leaders = state.players.filter(p => p.score === mx).map(p => p.id);
+      const act = activePlayers(state);
+      const mx = Math.max(...act.map(p => p.score));
+      const leaders = act.filter(p => p.score === mx).map(p => p.id);
       state.dealer = leaders.includes(state.dealer) ? state.dealer : leaders[0];
     }
-    const n = state.players.length;
+    if (state.players[state.dealer].out) state.dealer = nextIdx(state, state.dealer);
+    const n = activePlayers(state).length;
     state.deck = shuffle(makeDeck(), () => rnd(state));
     state.discard = [];
     state.players.forEach(p => { p.hand = []; });
     state.chosenSuit = null; state.pending = null; state.mustCover = null;
     state.drawnCard = null; state.offerCard = null;
     state.finisher = null; state.finishCards = null; state.aceTarget = false;
-    state.lastRound = null; state.losers = null;
+    state.lastRound = null; state.losers = null; state.eliminatedNow = [];
     state.log = [];
     // по одной карте по кругу, начиная с игрока после сдающего; сдающему 4-я карта идёт на стол
     let seat = nextIdx(state, state.dealer);
@@ -421,6 +436,7 @@
     state.finisher = null; state.finishCards = null; state.aceTarget = false; state.pending = null;
     const results = state.players.map((p, i) => {
       let pts, note;
+      if (p.out) return { idx: i, pts: 0, before: p.score, after: p.score, reset: false, note: 'выбыл', hand: [], out: true };
       if (i === finisher) {
         const qs = finishingCards.filter(isQ);
         pts = qs.length ? -qs.reduce((s, c) => s + queenFinishValue(c), 0) : 0;
@@ -440,6 +456,25 @@
     });
     state.lastRound = { round: state.round, finisher, results };
     state.history.push(state.lastRound);
+    if (state.mode === 'elim') {
+      // режим на выбывание: набравшие 108 выходят из-за стола, остальные играют дальше
+      const now = state.players.filter(p => !p.out && p.score >= TARGET);
+      now.forEach(p => { p.out = true; p.outRound = state.round; state.eliminated.push(p.id); });
+      state.eliminatedNow = now.map(p => p.id);
+      now.forEach(p => log(state, `${p.name} набрал ${p.score} и выбывает!`, 'end'));
+      const left = activePlayers(state);
+      if (left.length <= 1) {
+        let w = left[0];
+        if (!w) {                                  // выбыли все сразу — побеждает тот, у кого меньше очков
+          w = now.slice().sort((a, b) => a.score - b.score)[0];
+          w.out = false; state.eliminated = state.eliminated.filter(id => id !== w.id);
+        }
+        state.winner = w.id;
+        state.losers = state.players.filter(p => p.id !== w.id).map(p => p.id);
+        state.phase = 'gameOver';
+      } else state.phase = 'roundEnd';
+      return state;
+    }
     const over = state.players.filter(p => p.score >= TARGET);
     if (over.length) {
       state.losers = over.map(p => p.id);
@@ -537,7 +572,7 @@
     SUITS, RANKS, POINTS, SUIT_SYM, SUIT_RU, RANK_RU, TARGET, RESET_AT,
     createGame, startRound, legalMoves, playCard, chooseSuit, draw,
     acceptCounter, declineCounter, pass, finishWithQueens, botAction, STRATEGIES,
-    top, effSuit, cardName, canPlayOn, isQ, queenFinishValue, plural,
+    top, effSuit, cardName, canPlayOn, isQ, queenFinishValue, plural, nextIdx, prevIdx,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Engine108 = api;
