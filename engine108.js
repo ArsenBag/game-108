@@ -67,6 +67,9 @@
       mustCover: null,        // масть восьмёрки, которую обязан покрыть текущий игрок
       drawnCard: null,        // id карты, взятой в этот ход (единственная, которой можно сыграть)
       offerCard: null,        // id вытянутой карты-отбоя при взятии штрафа
+      finisher: null,         // кто выложил последнюю карту, но его карта ещё «действует» (6/7/К♥/туз) — партия не закончена
+      finishCards: null,      // чем он закрыл (для подсчёта дам)
+      aceTarget: false,       // текущий игрок «под тузом» вышедшего: может отбиться тузом или картой той же масти либо пропустить
       lastRound: null, losers: null,
       history: [],
       log: [],
@@ -112,6 +115,7 @@
     state.players.forEach(p => { p.hand = []; });
     state.chosenSuit = null; state.pending = null; state.mustCover = null;
     state.drawnCard = null; state.offerCard = null;
+    state.finisher = null; state.finishCards = null; state.aceTarget = false;
     state.lastRound = null; state.losers = null;
     state.log = [];
     // по одной карте по кругу, начиная с игрока после сдающего; сдающему 4-я карта идёт на стол
@@ -160,6 +164,13 @@
       res.drawLabel = `Взять ${state.pending.draws}`;
       return res;
     }
+    if (state.aceTarget) {
+      // под тузом: отбиться тузом или картой той же масти — или пропустить ход; вышедший (без карт) обязан взять карту
+      if (state.finisher === state.current) { res.canDraw = true; res.drawLabel = 'Взять карту'; return res; }
+      res.cards = p.hand.filter(c => c.rank === 'A' || c.suit === top(state).suit).map(c => c.id);
+      res.canPass = true; res.passLabel = 'Пропустить ход';
+      return res;
+    }
     if (state.drawnCard) {
       // после взятия карты: любой подходящий ход из руки или пас
       res.cards = p.hand.filter(c => canPlayOn(state, c)).map(c => c.id);
@@ -175,9 +186,34 @@
   // --- ходы ---------------------------------------------------
   function advance(state, skip) {
     state.drawnCard = null;
+    state.aceTarget = false;
     state.current = nextIdx(state, state.current);
     if (skip) state.current = nextIdx(state, state.current);
     state.phase = 'play';
+    if (state.finisher != null) resolveFinisher(state);
+  }
+  // ход дошёл до того, кто выложил последнюю карту: со штрафом — берёт и возвращается, без — вышел
+  function resolveFinisher(state) {
+    const f = state.finisher;
+    if (state.current !== f) return;
+    if (state.pending) {
+      log(state, `Штраф вернулся к ${state.players[f].name} — он снова в игре.`, 'info');
+      return;                                   // берёт штраф обычным ходом (draw), после этого finisher снимается
+    }
+    if (state.aceTarget) {
+      log(state, `${state.players[f].name} под тузом — должен взять карту и снова в игре.`, 'info');
+      return;                                   // берёт карту (draw), после этого finisher снимается
+    }
+    log(state, `${state.players[f].name} вышел.`, 'end');
+    endRound(state, f, state.finishCards || []);
+  }
+  // штраф взят / отбит — если это не вышедший, партия закончена
+  function settleAfterPenalty(state, takerIdx) {
+    if (state.finisher == null) return false;
+    if (takerIdx === state.finisher) { state.finisher = null; state.finishCards = null; return false; }
+    log(state, `${state.players[state.finisher].name} вышел.`, 'end');
+    endRound(state, state.finisher, state.finishCards || []);
+    return true;
   }
 
   function playCard(state, cardId) {
@@ -198,8 +234,20 @@
       return state; // ход остаётся у игрока
     }
     if (p.hand.length === 0) {
-      log(state, `${p.name} выложил последнюю карту — ${cardName(c)}.`, 'end');
-      return endRound(state, state.current, [c]);
+      if (state.finisher != null) {             // второй игрок тоже вышел — партия закончена, закрыл первый
+        log(state, `${p.name} выложил последнюю карту — ${cardName(c)}.`, 'end');
+        return endRound(state, state.finisher, state.finishCards || []);
+      }
+      const acts = c.rank === '6' || c.rank === '7' || c.rank === 'A' || (c.rank === 'K' && c.suit === 'H');
+      if (!acts) {
+        log(state, `${p.name} выложил последнюю карту — ${cardName(c)}.`, 'end');
+        return endRound(state, state.current, [c]);
+      }
+      // карта действует: партия продолжается, пока её не отобьют или штраф не возьмут
+      state.finisher = state.current; state.finishCards = [c];
+      log(state, `${p.name} выложил последнюю карту — ${cardName(c)}, но она действует!`, 'end');
+      applyEffects(state, c, wasCovering, wasPending);
+      return state;
     }
     applyEffects(state, c, wasCovering, wasPending);
     return state;
@@ -226,6 +274,13 @@
     } else if (wasPending && wasPending.kind === 'K' && c.rank === '9' && c.suit === 'H') {
       state.pending = null;
       log(state, `${p.name}: ${cardName(c)} — отбил короля червей.`, 'play');
+      if (settleAfterPenalty(state, state.current)) return state;
+    } else if (c.rank === 'A' && state.finisher != null) {
+      const nx = state.players[nextIdx(state, state.current)];
+      log(state, `${p.name}: ${cardName(c)} — ${nx.name} под тузом: отбиться тузом или картой ${SUIT_RU[c.suit]}, либо пропустить.`, 'play');
+      state.drawnCard = null; state.aceTarget = false; state.current = nextIdx(state, state.current); state.phase = 'play'; state.aceTarget = true;
+      resolveFinisher(state);
+      return state;
     } else if (c.rank === 'A') {
       skip = true;
       log(state, `${p.name}: ${cardName(c)} — ${state.players[nextIdx(state, state.current)].name} пропускает ход.`, 'play');
@@ -288,9 +343,19 @@
       }
     }
 
+    if (state.aceTarget) {
+      const c = drawOne(state);
+      state.aceTarget = false;
+      if (state.finisher === state.current) { state.finisher = null; state.finishCards = null; log(state, `${p.name} снова в игре.`, 'info'); }
+      if (!c) { advance(state, false); return state; }
+      p.hand.push(c);
+      if (c.rank === 'A' || c.suit === top(state).suit) { state.drawnCard = c.id; log(state, `${p.name} взял карту — ${cardName(c)}, можно покрыть туза.`, 'draw'); }
+      else { log(state, `${p.name} взял карту, ход переходит.`, 'draw'); advance(state, false); }
+      return state;
+    }
     if (state.pending) {
       const c = drawOne(state);
-      if (!c) { state.pending = null; advance(state, false); return state; }
+      if (!c) { state.pending = null; if (settleAfterPenalty(state, state.current)) return state; advance(state, false); return state; }
       p.hand.push(c);
       if (counters(state.pending, c)) {
         state.offerCard = c.id;
@@ -302,6 +367,7 @@
       for (let i = 0; i < rest; i++) { const d = drawOne(state); if (d) p.hand.push(d); }
       log(state, `${p.name} взял ${state.pending.draws} ${plural(state.pending.draws)}.`, 'draw');
       state.pending = null;
+      if (settleAfterPenalty(state, state.current)) return state;
       advance(state, false);
       return state;
     }
@@ -333,12 +399,18 @@
     for (let i = 0; i < rest; i++) { const d = drawOne(state); if (d) p.hand.push(d); }
     log(state, `${p.name} взял ${state.pending.draws} ${plural(state.pending.draws)}.`, 'draw');
     state.offerCard = null; state.pending = null;
+    if (settleAfterPenalty(state, state.current)) return state;
     advance(state, false);
     return state;
   }
   function pass(state) {
     const lm = legalMoves(state);
     if (!lm.canPass) throw new Error('Сейчас нельзя пасовать');
+    if (state.aceTarget) {
+      log(state, `${cur(state).name} пропускает ход.`, 'info');
+      advance(state, false);
+      return state;
+    }
     log(state, `${cur(state).name} пасует.`, 'info');
     advance(state, false);
     return state;
@@ -346,6 +418,7 @@
 
   // --- конец партии и счёт ------------------------------------
   function endRound(state, finisher, finishingCards) {
+    state.finisher = null; state.finishCards = null; state.aceTarget = false; state.pending = null;
     const results = state.players.map((p, i) => {
       let pts, note;
       if (i === finisher) {

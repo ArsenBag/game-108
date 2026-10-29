@@ -227,6 +227,7 @@ button:focus-visible, .card:focus-visible, .deck:focus-visible { outline: 4px so
 @keyframes shake { 0%,100% { transform: translate(0); } 20% { transform: translate(-6px, 2px) rotate(-.4deg); } 40% { transform: translate(5px, -3px) rotate(.4deg); } 60% { transform: translate(-4px, 2px); } 80% { transform: translate(3px, -1px); } }
 .badge-d { position: absolute; right: -2px; top: 4px; background: var(--card); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 7px; font-size: 10px; font-weight: 800; box-shadow: 2px 2px 0 var(--ink); transform: rotate(8deg); }
 .me-ava .badge-d { right: -14px; top: 0; }
+.badge-last.out { background: var(--sun); }
 .badge-last { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%) rotate(-6deg); background: var(--berry); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 900; white-space: nowrap; box-shadow: 2px 2px 0 var(--ink); animation: last-pulse .7s ease-in-out infinite alternate; z-index: 2; }
 .me-ava .badge-last { bottom: -6px; }
 @keyframes last-pulse { from { transform: translateX(-50%) rotate(-6deg) scale(1); } to { transform: translateX(-50%) rotate(-6deg) scale(1.12); } }
@@ -430,6 +431,9 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       mustCover: null,        // масть восьмёрки, которую обязан покрыть текущий игрок
       drawnCard: null,        // id карты, взятой в этот ход (единственная, которой можно сыграть)
       offerCard: null,        // id вытянутой карты-отбоя при взятии штрафа
+      finisher: null,         // кто выложил последнюю карту, но его карта ещё «действует» (6/7/К♥/туз) — партия не закончена
+      finishCards: null,      // чем он закрыл (для подсчёта дам)
+      aceTarget: false,       // текущий игрок «под тузом» вышедшего: может отбиться тузом или картой той же масти либо пропустить
       lastRound: null, losers: null,
       history: [],
       log: [],
@@ -475,6 +479,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     state.players.forEach(p => { p.hand = []; });
     state.chosenSuit = null; state.pending = null; state.mustCover = null;
     state.drawnCard = null; state.offerCard = null;
+    state.finisher = null; state.finishCards = null; state.aceTarget = false;
     state.lastRound = null; state.losers = null;
     state.log = [];
     // по одной карте по кругу, начиная с игрока после сдающего; сдающему 4-я карта идёт на стол
@@ -523,6 +528,13 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       res.drawLabel = `Взять ${state.pending.draws}`;
       return res;
     }
+    if (state.aceTarget) {
+      // под тузом: отбиться тузом или картой той же масти — или пропустить ход; вышедший (без карт) обязан взять карту
+      if (state.finisher === state.current) { res.canDraw = true; res.drawLabel = 'Взять карту'; return res; }
+      res.cards = p.hand.filter(c => c.rank === 'A' || c.suit === top(state).suit).map(c => c.id);
+      res.canPass = true; res.passLabel = 'Пропустить ход';
+      return res;
+    }
     if (state.drawnCard) {
       // после взятия карты: любой подходящий ход из руки или пас
       res.cards = p.hand.filter(c => canPlayOn(state, c)).map(c => c.id);
@@ -538,9 +550,34 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   // --- ходы ---------------------------------------------------
   function advance(state, skip) {
     state.drawnCard = null;
+    state.aceTarget = false;
     state.current = nextIdx(state, state.current);
     if (skip) state.current = nextIdx(state, state.current);
     state.phase = 'play';
+    if (state.finisher != null) resolveFinisher(state);
+  }
+  // ход дошёл до того, кто выложил последнюю карту: со штрафом — берёт и возвращается, без — вышел
+  function resolveFinisher(state) {
+    const f = state.finisher;
+    if (state.current !== f) return;
+    if (state.pending) {
+      log(state, `Штраф вернулся к ${state.players[f].name} — он снова в игре.`, 'info');
+      return;                                   // берёт штраф обычным ходом (draw), после этого finisher снимается
+    }
+    if (state.aceTarget) {
+      log(state, `${state.players[f].name} под тузом — должен взять карту и снова в игре.`, 'info');
+      return;                                   // берёт карту (draw), после этого finisher снимается
+    }
+    log(state, `${state.players[f].name} вышел.`, 'end');
+    endRound(state, f, state.finishCards || []);
+  }
+  // штраф взят / отбит — если это не вышедший, партия закончена
+  function settleAfterPenalty(state, takerIdx) {
+    if (state.finisher == null) return false;
+    if (takerIdx === state.finisher) { state.finisher = null; state.finishCards = null; return false; }
+    log(state, `${state.players[state.finisher].name} вышел.`, 'end');
+    endRound(state, state.finisher, state.finishCards || []);
+    return true;
   }
 
   function playCard(state, cardId) {
@@ -561,8 +598,20 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       return state; // ход остаётся у игрока
     }
     if (p.hand.length === 0) {
-      log(state, `${p.name} выложил последнюю карту — ${cardName(c)}.`, 'end');
-      return endRound(state, state.current, [c]);
+      if (state.finisher != null) {             // второй игрок тоже вышел — партия закончена, закрыл первый
+        log(state, `${p.name} выложил последнюю карту — ${cardName(c)}.`, 'end');
+        return endRound(state, state.finisher, state.finishCards || []);
+      }
+      const acts = c.rank === '6' || c.rank === '7' || c.rank === 'A' || (c.rank === 'K' && c.suit === 'H');
+      if (!acts) {
+        log(state, `${p.name} выложил последнюю карту — ${cardName(c)}.`, 'end');
+        return endRound(state, state.current, [c]);
+      }
+      // карта действует: партия продолжается, пока её не отобьют или штраф не возьмут
+      state.finisher = state.current; state.finishCards = [c];
+      log(state, `${p.name} выложил последнюю карту — ${cardName(c)}, но она действует!`, 'end');
+      applyEffects(state, c, wasCovering, wasPending);
+      return state;
     }
     applyEffects(state, c, wasCovering, wasPending);
     return state;
@@ -589,6 +638,13 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     } else if (wasPending && wasPending.kind === 'K' && c.rank === '9' && c.suit === 'H') {
       state.pending = null;
       log(state, `${p.name}: ${cardName(c)} — отбил короля червей.`, 'play');
+      if (settleAfterPenalty(state, state.current)) return state;
+    } else if (c.rank === 'A' && state.finisher != null) {
+      const nx = state.players[nextIdx(state, state.current)];
+      log(state, `${p.name}: ${cardName(c)} — ${nx.name} под тузом: отбиться тузом или картой ${SUIT_RU[c.suit]}, либо пропустить.`, 'play');
+      state.drawnCard = null; state.aceTarget = false; state.current = nextIdx(state, state.current); state.phase = 'play'; state.aceTarget = true;
+      resolveFinisher(state);
+      return state;
     } else if (c.rank === 'A') {
       skip = true;
       log(state, `${p.name}: ${cardName(c)} — ${state.players[nextIdx(state, state.current)].name} пропускает ход.`, 'play');
@@ -651,9 +707,19 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       }
     }
 
+    if (state.aceTarget) {
+      const c = drawOne(state);
+      state.aceTarget = false;
+      if (state.finisher === state.current) { state.finisher = null; state.finishCards = null; log(state, `${p.name} снова в игре.`, 'info'); }
+      if (!c) { advance(state, false); return state; }
+      p.hand.push(c);
+      if (c.rank === 'A' || c.suit === top(state).suit) { state.drawnCard = c.id; log(state, `${p.name} взял карту — ${cardName(c)}, можно покрыть туза.`, 'draw'); }
+      else { log(state, `${p.name} взял карту, ход переходит.`, 'draw'); advance(state, false); }
+      return state;
+    }
     if (state.pending) {
       const c = drawOne(state);
-      if (!c) { state.pending = null; advance(state, false); return state; }
+      if (!c) { state.pending = null; if (settleAfterPenalty(state, state.current)) return state; advance(state, false); return state; }
       p.hand.push(c);
       if (counters(state.pending, c)) {
         state.offerCard = c.id;
@@ -665,6 +731,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       for (let i = 0; i < rest; i++) { const d = drawOne(state); if (d) p.hand.push(d); }
       log(state, `${p.name} взял ${state.pending.draws} ${plural(state.pending.draws)}.`, 'draw');
       state.pending = null;
+      if (settleAfterPenalty(state, state.current)) return state;
       advance(state, false);
       return state;
     }
@@ -696,12 +763,18 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     for (let i = 0; i < rest; i++) { const d = drawOne(state); if (d) p.hand.push(d); }
     log(state, `${p.name} взял ${state.pending.draws} ${plural(state.pending.draws)}.`, 'draw');
     state.offerCard = null; state.pending = null;
+    if (settleAfterPenalty(state, state.current)) return state;
     advance(state, false);
     return state;
   }
   function pass(state) {
     const lm = legalMoves(state);
     if (!lm.canPass) throw new Error('Сейчас нельзя пасовать');
+    if (state.aceTarget) {
+      log(state, `${cur(state).name} пропускает ход.`, 'info');
+      advance(state, false);
+      return state;
+    }
     log(state, `${cur(state).name} пасует.`, 'info');
     advance(state, false);
     return state;
@@ -709,6 +782,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
 
   // --- конец партии и счёт ------------------------------------
   function endRound(state, finisher, finishingCards) {
+    state.finisher = null; state.finishCards = null; state.aceTarget = false; state.pending = null;
     const results = state.players.map((p, i) => {
       let pts, note;
       if (i === finisher) {
@@ -1515,6 +1589,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const afterPending = G.pending, afterCover = G.mustCover;
     const roundOver = G.phase === 'roundEnd' || G.phase === 'gameOver';
     if (roundOver) { reactToRoundEnd(); return; }
+    if (played > 0 && G.finisher === actor && b.finisher == null) {          // вышел «действующей» картой — ещё не точно
+      setTimeout(() => setMood(actor, 'excited', 3000, 'Я вышел! Кажется…'), 300);
+    }
+    if (G.finisher != null && G.current === G.finisher && (G.pending || G.aceTarget) && ACTIVE.has(G.phase)) {
+      setTimeout(() => setMood(G.finisher, 'worried', 3000, G.pending ? 'Только не ко мне!' : 'Опять я?!'), 600);
+    }
     if (played > 0) {
       const c = G.discard[G.discard.length - 1];
       const isAttack = c.rank === '6' || c.rank === '7' || (c.rank === 'K' && c.suit === 'H');
@@ -1548,6 +1628,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     G.players.forEach((p, i) => {
       const drew = p.hand.length - b.hands[i];
       if (drew <= 0) return;
+      if (b.hands[i] === 0 && b.finisher === i) {                              // вышедшего вернули в игру
+        setMood(i, 'devastated', 4500, `Вернули! +${drew}`); popAt(i, `+${drew}`, 'bad'); shake(1);
+        G.players.forEach(q => { if (q.id !== i) setMood(q.id, 'laugh', 4000); });
+        return;
+      }
       for (let k = 0; k < Math.min(drew, 6); k++) setTimeout(() => SFX.play('draw', { minGap: 0 }), k * 90);
       if (b.pending) { popAt(i, `+${drew}`, 'bad'); if (drew >= 4) shake(drew >= 6 ? 2 : 1); }
       else if (b.mustCover && drew >= 2) popAt(i, `+${drew}`, 'bad');
@@ -1634,7 +1719,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
         <div class="bubble" data-bubble="${p.id}"></div>
         ${avatar(avatarSeeds[p.id], moodOf(p.id))}
         ${p.id === G.dealer ? '<div class="badge-d" title="Сдаёт">сдаёт</div>' : ''}
-        ${p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : ''}
+        ${p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : (G.finisher === p.id && ACTIVE.has(G.phase) ? '<div class="badge-last out">вышел?</div>' : '')}
         <div class="name">${esc(p.name)}</div>
         <div class="fan" ${dealing ? 'style="visibility:hidden"' : ''}>${Array.from({ length: Math.min(p.hand.length, 12) }, () => '<div class="mini back"></div>').join('')}</div>
         <div class="meta"><span><b>${p.hand.length}</b> ${E.plural(p.hand.length)}</span><span>счёт <b class="${prevScores[p.id] !== undefined && prevScores[p.id] !== p.score ? 'bump' : ''}">${p.score}</b></span></div>
@@ -1659,6 +1744,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       st += `<div class="chip danger">Штраф: взять ${G.pending.draws}${G.pending.count < 4 ? ' или отбиться ' + what : ''}</div>`;
     }
     if (G.mustCover) st += `<div class="chip danger">Покрыть восьмёрку: ${E.SUIT_SYM[G.mustCover]}, дама или 8</div>`;
+    if (G.finisher != null && ACTIVE.has(G.phase)) st += `<div class="chip gold">${esc(G.players[G.finisher].name)} ${G.finisher === me ? 'вышли' : 'вышел'} — карта действует!</div>`;
+    if (G.aceTarget && ACTIVE.has(G.phase)) st += `<div class="chip danger">${G.current === me ? 'Вы' : esc(G.players[G.current].name)} под тузом ${E.SUIT_SYM[t.suit]}</div>`;
     if (t.rank === 'Q' && G.chosenSuit && !G.pending) st += `<div class="chip gold">Заказано <span class="suit-big">${E.SUIT_SYM[G.chosenSuit]}</span></div>`;
     if (ACTIVE.has(G.phase)) {
       st += G.current === me ? `<div class="turn-note you">Ваш ход!</div>` : `<div class="turn-note wait">ходит ${esc(G.players[G.current].name)}</div>`;
@@ -1684,9 +1771,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     let a = '';
     if (myTurn && G.phase === 'play') {
       if (lm.canDraw) a += `<button class="btn ${lm.cards.length && !G.pending ? '' : 'primary'}" data-act="draw">${esc(lm.drawLabel)}</button>`;
-      if (lm.canPass) a += `<button class="btn primary" data-act="pass">Пас</button>`;
+      if (lm.canPass) a += `<button class="btn ${lm.passLabel ? '' : 'primary'}" data-act="pass">${esc(lm.passLabel || 'Пас')}</button>`;
       if (lm.canFinishQueens) a += `<button class="btn primary" data-act="queens">Сбросить всех дам и закрыть партию</button>`;
-      if (lm.cards.length && !lm.canPass) a += `<span class="hint">${G.pending || G.mustCover ? 'Подсвеченной картой можно отбиться' : 'Сыграйте подсвеченную карту или возьмите из колоды'}</span>`;
+      if (G.aceTarget && lm.canPass) a += `<span class="hint">${lm.cards.length ? 'Отбейтесь тузом или картой той же масти — или пропустите ход' : 'Нечем отбиться — пропустите ход'}</span>`;
+      else if (G.aceTarget && lm.canDraw) a += `<span class="hint">Вы под тузом без карт — берите карту и возвращайтесь в игру</span>`;
+      else if (lm.cards.length && !lm.canPass) a += `<span class="hint">${G.pending || G.mustCover ? 'Подсвеченной картой можно отбиться' : 'Сыграйте подсвеченную карту или возьмите из колоды'}</span>`;
     }
     $('actions').innerHTML = a;
 
@@ -1724,7 +1813,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const handRects = {};
     document.querySelectorAll('#hand .card').forEach(el => { handRects[el.dataset.id] = el.getBoundingClientRect(); });
     return {
-      current: G.current, discard: dlen(G), round: G.round,
+      current: G.current, discard: dlen(G), round: G.round, finisher: G.finisher,
       pending: G.pending, mustCover: G.mustCover,
       hands: G.players.map(p => p.hand.length),
       deck: rectOf('#deck'), disc: rectOf('#discard'), handRects, seats: G.players.map(p => seatRect(p.id)),
@@ -1884,6 +1973,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       <h3>Дамы</h3><ul>
         <li>Закрыли партию дамой — <b>−20</b>, пиковой <b>−40</b>. Остались одни дамы — можно сбросить все сразу (−20 за каждую).</li>
         <li>Партию закрыл другой, а у вас одни дамы — <b>+20</b> за каждую, пиковая +40. Дамы вперемешку с другими картами — по 3.</li>
+      </ul>
+      <h3>Последняя карта действует</h3><ul>
+        <li>Если последняя карта — <b>6, 7, король червей или туз</b>, она действует как обычно, и партия ещё не закончена.</li>
+        <li><b>6/7:</b> следующий берёт или отбивается; цепочка может вернуться к вышедшему — тогда он берёт штраф и снова в игре. Взял кто-то другой — партия закончена.</li>
+        <li><b>Король червей:</b> следующий берёт 5 или отбивается 9♥ — в обоих случаях партия закончена.</li>
+        <li><b>Туз:</b> тот, кого «кинули», может вместо пропуска отбиться тузом или картой той же масти. Игра идёт, пока ход не дойдёт до вышедшего: со штрафом или «под тузом» — он берёт и возвращается, иначе он вышел.</li>
       </ul>
       <h3>Игра</h3><ul><li>Партия заканчивается, когда кто-то выложил последнюю карту. Очки копятся. Кто набрал 108 и больше — проиграл; если таких несколько, проигрывают все. Ровно 107 — счёт обнуляется.</li></ul>
       </div><div class="row"><button class="btn primary" data-act="close">Понятно</button></div>`);

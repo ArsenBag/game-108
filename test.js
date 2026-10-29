@@ -186,3 +186,53 @@ console.log('все сценарии правил прошли');
   assert(E.legalMoves(g2).canDraw); // брать можно всегда
 }
 console.log('дама и взятие карты — ок');
+
+// ---- последняя карта 6/7/К♥/туз действует: окно выхода ----
+(function () {
+const E=require('./engine108.js');
+const C=(id)=>({id,rank:id.slice(0,-1),suit:id.slice(-1)});
+function mk(n,hands,top){ const G=E.createGame({players:Array.from({length:n},(_,i)=>({name:'P'+i})),seed:1}); E.startRound(G); G.discard=[C(top)]; G.current=0; G.pending=null; G.mustCover=null; G.chosenSuit=null; G.phase='play'; G.drawnCard=null; hands.forEach((h,i)=>G.players[i].hand=h.map(C)); return G; }
+let G, ok=0, fail=0; const t=(name,c)=>{ if(c){ok++;} else {fail++; console.log('FAIL',name);} };
+// 1: 6 последней, цепочка возвращается к вышедшему (3 игрока)
+G=mk(3,[['6S'],['6H','10D'],['6C','JD']],'9S');
+E.playCard(G,'6S'); t('1a окно',G.finisher===0&&G.phase==='play'&&G.current===1);
+E.playCard(G,'6H'); E.playCard(G,'6C'); t('1b ход у вышедшего со штрафом',G.current===0&&G.pending.draws===3);
+E.draw(G); if(G.phase==='counterOffer') E.declineCounter(G); t('1c вернулся',G.players[0].hand.length>=3&&G.finisher===null&&G.phase==='play'&&G.current===1);
+// 2: 7 последней, следующий берёт → конец, закрыл P0
+G=mk(3,[['7S'],['10D'],['JD']],'9S'); E.playCard(G,'7S'); E.draw(G);
+t('2 конец после взятия',G.phase==='roundEnd'&&G.lastRound.finisher===0&&G.lastRound.results[1].hand.length===3);
+// 3: туз последней, B отбился тузом, C кинул 6 той масти → P0 берёт и возвращается
+G=mk(3,[['AS'],['AC','10D'],['6C','JD']],'9S');
+E.playCard(G,'AS'); t('3a B под тузом',G.aceTarget&&G.current===1&&E.legalMoves(G).cards.join()==='AC'&&E.legalMoves(G).canPass);
+E.playCard(G,'AC'); t('3b C под тузом',G.aceTarget&&G.current===2&&E.legalMoves(G).cards.join()==='6C');
+E.playCard(G,'6C'); t('3c штраф у P0',G.current===0&&G.pending&&G.pending.draws===1);
+E.draw(G); if(G.phase==='counterOffer') E.declineCounter(G); t('3d P0 вернулся',G.finisher===null&&G.players[0].hand.length>=1&&G.phase==='play');
+// 4: туз последней, B пропускает, C ходит обычно, круг доходит до P0 без штрафа → конец
+G=mk(3,[['AS'],['10D','JD'],['9D','JC']],'9S');
+E.playCard(G,'AS'); E.pass(G); t('4a после пропуска ход у C',G.current===2&&!G.aceTarget&&G.phase==='play');
+const lm=E.legalMoves(G); t('4b C ходит по тузу пик',lm.cards.length===0&&lm.canDraw);
+E.draw(G); if(G.drawnCard) E.pass(G);
+t('4c конец, P0 вышел',G.phase==='roundEnd'&&G.lastRound.finisher===0);
+// 5: туз последней, B кинул 10 той же масти, C кинул 6 → P0 берёт (3 игрока)
+G=mk(3,[['AS'],['10S','JD'],['6S','JC']],'9S');
+E.playCard(G,'AS'); E.playCard(G,'10S'); t('5a игра идёт',G.phase==='play'&&G.current===2&&!G.aceTarget);
+E.playCard(G,'6S'); t('5b штраф у P0',G.current===0&&G.pending.draws===1);
+// 6: К♥ последней, 9♥ → конец без взятия
+G=mk(3,[['KH'],['9H','10D'],['JD']],'10H'); E.playCard(G,'KH'); E.playCard(G,'9H');
+t('6 конец после 9♥',G.phase==='roundEnd'&&G.lastRound.finisher===0&&G.lastRound.results[1].hand.length===1);
+// 7: К♥ последней, берёт 5 → конец
+G=mk(3,[['KH'],['10D'],['JD']],'10H'); E.playCard(G,'KH'); E.draw(G); if(G.phase==='counterOffer') E.declineCounter(G);
+t('7 конец после взятия 5',G.phase==='roundEnd'&&G.lastRound.results[1].hand.length===6);
+// 8: вышедший под тузом (2 игрока: P0 туз, P1 туз → P0 под тузом) → берёт карту и возвращается
+G=mk(2,[['AS'],['AC','10D']],'9S'); E.playCard(G,'AS'); E.playCard(G,'AC');
+t('8a P0 под тузом',G.current===0&&G.aceTarget&&E.legalMoves(G).canDraw&&!E.legalMoves(G).canPass);
+E.draw(G); t('8b P0 вернулся',G.finisher===null&&G.players[0].hand.length===1);
+// 9: обычная последняя карта — конец сразу
+G=mk(3,[['10S'],['10D'],['JD']],'9S'); E.playCard(G,'10S'); t('9 обычная карта',G.phase==='roundEnd');
+// 10: второй игрок тоже вышел в окне → конец, закрыл первый
+G=mk(3,[['6S'],['6H'],['JD','QS']],'9S'); E.playCard(G,'6S'); E.playCard(G,'6H'); t('10 второй вышел',G.phase==='roundEnd'&&G.lastRound.finisher===0);
+// 11: симуляция ботов — ничего не ломается
+let fin=0; for(let i=0;i<500;i++){ const g=E.createGame({players:[{name:'a',isBot:true},{name:'b',isBot:true},{name:'c',isBot:true,strategy:'greedy'},{name:'d',isBot:true}],seed:i}); E.startRound(g); let n=0; while(g.phase!=='roundEnd'&&g.phase!=='gameOver'&&n<3000){E.botAction(g);n++;} if(n<3000) fin++; }
+t('11 симуляция 500 партий',fin===500);
+if (fail) { console.log('окно выхода: ошибок', fail); process.exit(1); } console.log('окно выхода: ' + ok + ' проверок — ок');
+})();

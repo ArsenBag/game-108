@@ -227,6 +227,7 @@ button:focus-visible, .card:focus-visible, .deck:focus-visible { outline: 4px so
 @keyframes shake { 0%,100% { transform: translate(0); } 20% { transform: translate(-6px, 2px) rotate(-.4deg); } 40% { transform: translate(5px, -3px) rotate(.4deg); } 60% { transform: translate(-4px, 2px); } 80% { transform: translate(3px, -1px); } }
 .badge-d { position: absolute; right: -2px; top: 4px; background: var(--card); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 7px; font-size: 10px; font-weight: 800; box-shadow: 2px 2px 0 var(--ink); transform: rotate(8deg); }
 .me-ava .badge-d { right: -14px; top: 0; }
+.badge-last.out { background: var(--sun); }
 .badge-last { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%) rotate(-6deg); background: var(--berry); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 900; white-space: nowrap; box-shadow: 2px 2px 0 var(--ink); animation: last-pulse .7s ease-in-out infinite alternate; z-index: 2; }
 .me-ava .badge-last { bottom: -6px; }
 @keyframes last-pulse { from { transform: translateX(-50%) rotate(-6deg) scale(1); } to { transform: translateX(-50%) rotate(-6deg) scale(1.12); } }
@@ -622,6 +623,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const afterPending = G.pending, afterCover = G.mustCover;
     const roundOver = G.phase === 'roundEnd' || G.phase === 'gameOver';
     if (roundOver) { reactToRoundEnd(); return; }
+    if (played > 0 && G.finisher === actor && b.finisher == null) {          // вышел «действующей» картой — ещё не точно
+      setTimeout(() => setMood(actor, 'excited', 3000, 'Я вышел! Кажется…'), 300);
+    }
+    if (G.finisher != null && G.current === G.finisher && (G.pending || G.aceTarget) && ACTIVE.has(G.phase)) {
+      setTimeout(() => setMood(G.finisher, 'worried', 3000, G.pending ? 'Только не ко мне!' : 'Опять я?!'), 600);
+    }
     if (played > 0) {
       const c = G.discard[G.discard.length - 1];
       const isAttack = c.rank === '6' || c.rank === '7' || (c.rank === 'K' && c.suit === 'H');
@@ -655,6 +662,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     G.players.forEach((p, i) => {
       const drew = p.hand.length - b.hands[i];
       if (drew <= 0) return;
+      if (b.hands[i] === 0 && b.finisher === i) {                              // вышедшего вернули в игру
+        setMood(i, 'devastated', 4500, `Вернули! +${drew}`); popAt(i, `+${drew}`, 'bad'); shake(1);
+        G.players.forEach(q => { if (q.id !== i) setMood(q.id, 'laugh', 4000); });
+        return;
+      }
       for (let k = 0; k < Math.min(drew, 6); k++) setTimeout(() => SFX.play('draw', { minGap: 0 }), k * 90);
       if (b.pending) { popAt(i, `+${drew}`, 'bad'); if (drew >= 4) shake(drew >= 6 ? 2 : 1); }
       else if (b.mustCover && drew >= 2) popAt(i, `+${drew}`, 'bad');
@@ -741,7 +753,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
         <div class="bubble" data-bubble="${p.id}"></div>
         ${avatar(avatarSeeds[p.id], moodOf(p.id))}
         ${p.id === G.dealer ? '<div class="badge-d" title="Сдаёт">сдаёт</div>' : ''}
-        ${p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : ''}
+        ${p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : (G.finisher === p.id && ACTIVE.has(G.phase) ? '<div class="badge-last out">вышел?</div>' : '')}
         <div class="name">${esc(p.name)}</div>
         <div class="fan" ${dealing ? 'style="visibility:hidden"' : ''}>${Array.from({ length: Math.min(p.hand.length, 12) }, () => '<div class="mini back"></div>').join('')}</div>
         <div class="meta"><span><b>${p.hand.length}</b> ${E.plural(p.hand.length)}</span><span>счёт <b class="${prevScores[p.id] !== undefined && prevScores[p.id] !== p.score ? 'bump' : ''}">${p.score}</b></span></div>
@@ -766,6 +778,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       st += `<div class="chip danger">Штраф: взять ${G.pending.draws}${G.pending.count < 4 ? ' или отбиться ' + what : ''}</div>`;
     }
     if (G.mustCover) st += `<div class="chip danger">Покрыть восьмёрку: ${E.SUIT_SYM[G.mustCover]}, дама или 8</div>`;
+    if (G.finisher != null && ACTIVE.has(G.phase)) st += `<div class="chip gold">${esc(G.players[G.finisher].name)} ${G.finisher === me ? 'вышли' : 'вышел'} — карта действует!</div>`;
+    if (G.aceTarget && ACTIVE.has(G.phase)) st += `<div class="chip danger">${G.current === me ? 'Вы' : esc(G.players[G.current].name)} под тузом ${E.SUIT_SYM[t.suit]}</div>`;
     if (t.rank === 'Q' && G.chosenSuit && !G.pending) st += `<div class="chip gold">Заказано <span class="suit-big">${E.SUIT_SYM[G.chosenSuit]}</span></div>`;
     if (ACTIVE.has(G.phase)) {
       st += G.current === me ? `<div class="turn-note you">Ваш ход!</div>` : `<div class="turn-note wait">ходит ${esc(G.players[G.current].name)}</div>`;
@@ -791,9 +805,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     let a = '';
     if (myTurn && G.phase === 'play') {
       if (lm.canDraw) a += `<button class="btn ${lm.cards.length && !G.pending ? '' : 'primary'}" data-act="draw">${esc(lm.drawLabel)}</button>`;
-      if (lm.canPass) a += `<button class="btn primary" data-act="pass">Пас</button>`;
+      if (lm.canPass) a += `<button class="btn ${lm.passLabel ? '' : 'primary'}" data-act="pass">${esc(lm.passLabel || 'Пас')}</button>`;
       if (lm.canFinishQueens) a += `<button class="btn primary" data-act="queens">Сбросить всех дам и закрыть партию</button>`;
-      if (lm.cards.length && !lm.canPass) a += `<span class="hint">${G.pending || G.mustCover ? 'Подсвеченной картой можно отбиться' : 'Сыграйте подсвеченную карту или возьмите из колоды'}</span>`;
+      if (G.aceTarget && lm.canPass) a += `<span class="hint">${lm.cards.length ? 'Отбейтесь тузом или картой той же масти — или пропустите ход' : 'Нечем отбиться — пропустите ход'}</span>`;
+      else if (G.aceTarget && lm.canDraw) a += `<span class="hint">Вы под тузом без карт — берите карту и возвращайтесь в игру</span>`;
+      else if (lm.cards.length && !lm.canPass) a += `<span class="hint">${G.pending || G.mustCover ? 'Подсвеченной картой можно отбиться' : 'Сыграйте подсвеченную карту или возьмите из колоды'}</span>`;
     }
     $('actions').innerHTML = a;
 
@@ -831,7 +847,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const handRects = {};
     document.querySelectorAll('#hand .card').forEach(el => { handRects[el.dataset.id] = el.getBoundingClientRect(); });
     return {
-      current: G.current, discard: dlen(G), round: G.round,
+      current: G.current, discard: dlen(G), round: G.round, finisher: G.finisher,
       pending: G.pending, mustCover: G.mustCover,
       hands: G.players.map(p => p.hand.length),
       deck: rectOf('#deck'), disc: rectOf('#discard'), handRects, seats: G.players.map(p => seatRect(p.id)),
@@ -991,6 +1007,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       <h3>Дамы</h3><ul>
         <li>Закрыли партию дамой — <b>−20</b>, пиковой <b>−40</b>. Остались одни дамы — можно сбросить все сразу (−20 за каждую).</li>
         <li>Партию закрыл другой, а у вас одни дамы — <b>+20</b> за каждую, пиковая +40. Дамы вперемешку с другими картами — по 3.</li>
+      </ul>
+      <h3>Последняя карта действует</h3><ul>
+        <li>Если последняя карта — <b>6, 7, король червей или туз</b>, она действует как обычно, и партия ещё не закончена.</li>
+        <li><b>6/7:</b> следующий берёт или отбивается; цепочка может вернуться к вышедшему — тогда он берёт штраф и снова в игре. Взял кто-то другой — партия закончена.</li>
+        <li><b>Король червей:</b> следующий берёт 5 или отбивается 9♥ — в обоих случаях партия закончена.</li>
+        <li><b>Туз:</b> тот, кого «кинули», может вместо пропуска отбиться тузом или картой той же масти. Игра идёт, пока ход не дойдёт до вышедшего: со штрафом или «под тузом» — он берёт и возвращается, иначе он вышел.</li>
       </ul>
       <h3>Игра</h3><ul><li>Партия заканчивается, когда кто-то выложил последнюю карту. Очки копятся. Кто набрал 108 и больше — проиграл; если таких несколько, проигрывают все. Ровно 107 — счёт обнуляется.</li></ul>
       </div><div class="row"><button class="btn primary" data-act="close">Понятно</button></div>`);
