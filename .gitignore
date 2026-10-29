@@ -6,3 +6,9 @@ promo/frames_game/
 promo/frames_video/
 promo/*.mp4
 promo/*.wav
+www/
+android-keys/
+*.p12
+*.jks
+*.keystore
+store/build/

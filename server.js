@@ -27,8 +27,8 @@ const PORT = process.env.PORT || 3108;
 const ROOT = __dirname;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json', '.webp': 'image/webp', '.png': 'image/png',
   '.mp3': 'audio/mpeg', '.css': 'text/css', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.md': 'text/plain; charset=utf-8',
-  '.jpg': 'image/jpeg', '.webmanifest': 'application/manifest+json' };
-const STATIC_DIRS = ['art', 'sprites', 'sfx'];
+  '.jpg': 'image/jpeg', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.woff': 'font/woff' };
+const STATIC_DIRS = ['art', 'sprites', 'sfx', 'fonts'];
 const CHAR_NAMES = { m01: 'Санжар', m02: 'Тимур', m03: 'Рустам', m04: 'Шерзод', m05: 'Азиз', m06: 'Бахтиёр', m07: 'Джавохир',
   m08: 'Ильхом-ака', m09: 'Равшан', m10: 'MC Шох', m11: 'Фаррух', m12: 'Шавкат-ошпаз', m13: 'Алишер-полвон', m14: 'Турсун-бобо', m15: 'Дядя Вали',
   f01: 'Дильноза', f02: 'Камила', f03: 'Мадина', f04: 'Нигора', f05: 'Зухра', f06: 'Малика', f07: 'Холида-опа', f08: 'Лола', f09: 'Гульнара', f10: 'Нилуфар' };

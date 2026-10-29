@@ -1,0 +1,13 @@
+{
+  "appId": "com.arsenbag.game108",
+  "appName": "108",
+  "webDir": "www",
+  "backgroundColor": "#0f4c4c",
+  "android": {
+    "backgroundColor": "#0f4c4c",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SystemBars": { "insetsHandling": "css", "style": "DARK", "initialViewportFitValueHint": "cover" }
+  }
+}

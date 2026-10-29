@@ -1,0 +1,47 @@
+# Сборка Android-приложения «108»: неподписанный AAB для Google Play (подписывается ключом загрузки вне GitHub)
+# и тестовый APK (отладочная подпись) — оба выкладываются в релиз «android-latest».
+name: Android
+on:
+  push:
+    branches: [main]
+    paths: ['108.html', 'page.html', 'art/**', 'sprites/**', 'sfx/**', 'fonts/**', 'android/**', 'capacitor.config.json', 'package.json', 'package-lock.json', 'scripts/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: android-build
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - name: Веб-часть приложения
+        run: node scripts/build-www.js && npx cap sync android
+      - name: Сборка AAB и тестового APK
+        working-directory: android
+        run: chmod +x gradlew && ./gradlew --no-daemon bundleRelease assembleDebug
+      - name: Релиз android-latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VC=$(grep -oP 'versionCode \K\d+' android/app/build.gradle)
+          VN=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          cp android/app/build/outputs/bundle/release/app-release.aab 108-unsigned.aab
+          cp android/app/build/outputs/apk/debug/app-debug.apk 108-test.apk
+          sha256sum 108-unsigned.aab 108-test.apk > SHA256SUMS.txt
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest 108-unsigned.aab 108-test.apk SHA256SUMS.txt --prerelease \
+            --title "Android $VN ($VC) — последняя сборка" \
+            --notes "Сборка из коммита ${GITHUB_SHA::7}. 108-test.apk — для установки на телефон напрямую (отладочная подпись). 108-unsigned.aab — для Google Play, подписывается ключом загрузки отдельно."

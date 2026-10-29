@@ -13,8 +13,17 @@
 <link rel="apple-touch-icon" href="art/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@700;900&family=Nunito:wght@600;800&display=swap">
 <style>
+/* шрифты Rubik и Nunito (OFL) лежат рядом, в fonts/ — работают и без интернета */
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/rubik-cyrillic-700-normal.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/rubik-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 900; font-display: swap; src: url("fonts/rubik-cyrillic-900-normal.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 900; font-display: swap; src: url("fonts/rubik-latin-900-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/nunito-cyrillic-600-normal.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/nunito-latin-600-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 800; font-display: swap; src: url("fonts/nunito-cyrillic-800-normal.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 800; font-display: swap; src: url("fonts/nunito-latin-800-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+
 /* Макет: один экран. Сверху соперники с нарисованными аватарами, в центре овальный стол
    с колодой и битой, снизу — вы и ваша рука. Мультяшный стиль: толстые чернильные контуры,
    жёсткие смещённые тени без размытия, пухлые кнопки, карты летают между местами.
@@ -515,6 +524,96 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   .status { min-width: 100px; }
   .turn-note { font-size: 17px; }
 }
+
+/* ================= телефон: вся игра в один экран, без прокрутки ================= */
+#btnMenu, .emo-toggle { display: none; }
+.in-app body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.in-app input { -webkit-user-select: text; user-select: text; }
+.hand-break { flex-basis: 100%; height: 0; }
+@media (max-width: 560px) {
+  html, body { height: 100%; overscroll-behavior: none; }
+  body { -webkit-tap-highlight-color: transparent; }
+  .app { height: 100dvh; gap: 4px; max-width: none;
+    padding-top: max(6px, env(safe-area-inset-top, 0px)); padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); }
+  /* шапка в одну строку: остальное — в меню */
+  .top { flex-wrap: nowrap; gap: 6px; min-height: 34px; }
+  .top .btn.small:not(#btnSound):not(#btnMenu) { display: none; }
+  #btnMenu { display: inline-block; font-size: 16px; padding: 4px 12px; }
+  #btnSound { padding: 4px 9px; }
+  .logo { font-size: 24px; }
+  .round-chip { font-size: 13px; white-space: nowrap; }
+  .net-status { font-size: 11px; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* соперники одним рядом */
+  .seats { flex-wrap: nowrap; gap: 3px; justify-content: space-around; }
+  .seat { flex: 1 1 0; min-width: 0; max-width: 110px; padding: 2px 1px 3px; border-radius: 14px; gap: 1px; }
+  .seat .ava-wrap { width: 64px; height: 72px; }
+  .seats.n4 .seat .ava-wrap, .seats.n5 .seat .ava-wrap { width: 54px; height: 60px; }
+  .seat .name { font-size: 11px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+  .seat .fan { height: 18px; margin-top: 0; }
+  .seat .fan .mini { width: 12px; height: 17px; margin-left: -8px; border-radius: 3px; border-width: 1.5px; box-shadow: 1px 1px 0 var(--ink); }
+  .seat .meta { font-size: 10px; gap: 4px; line-height: 1.15; flex-wrap: wrap; justify-content: center; }
+  .seat .meter { width: 54px; height: 5px; margin-top: 1px; }
+  .seat .meter i { background-size: 54px 100%; }
+  .seat .badge-d { font-size: 9px; padding: 0 5px; right: 0; top: 0; }
+  .seat .badge-last { bottom: 34px; font-size: 9px; padding: 1px 6px; }
+  .bubble { font-size: 10.5px; padding: 3px 7px; max-width: 92px; white-space: normal; line-height: 1.15; text-align: center; border-radius: 10px; }
+  /* стол */
+  .arena { min-height: 118px; }
+  .table { max-height: 230px; min-height: 118px; border-width: 6px; gap: 10px; padding-inline: 8px; }
+  .table .deck, .table .discard-slot, .table .deck .back, .table .discard-slot .card { width: 52px; height: 74px; }
+  .table .card .corner { font-size: 13px; } .table .card .center { font-size: 26px; }
+  .table .card .center .art { width: 46px; height: 50px; } .table .card .center .ci { width: 26px; height: 26px; }
+  .pile .lbl { font-size: 10.5px; }
+  .status { min-width: 0; max-width: 46%; gap: 5px; }
+  .status .chip { font-size: 11.5px; padding: 4px 9px; }
+  .turn-note { font-size: 16px; }
+  .last-act { font-size: 10.5px; max-width: 150px; }
+  /* вы: одна строка, реакции — по кнопке */
+  .me-row { width: 100%; box-sizing: border-box; margin: 0; padding: 2px 8px; gap: 8px; justify-content: flex-start; position: relative; flex-wrap: nowrap; }
+  .me-row > div:nth-child(2) { min-width: 0; flex: 1; }
+  .me-row .name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .me-row .meta { font-size: 12px; }
+  .me-row .ava-wrap { width: 48px; height: 54px; }
+  .me-row .meter { width: 100%; max-width: 150px; }
+  .emo-toggle { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--ink); background: var(--card); box-shadow: 0 3px 0 var(--ink); padding: 0; font-size: 20px; }
+  .emo-toggle.on { background: var(--sun); }
+  .me-row .emos { display: none; position: absolute; right: 6px; bottom: calc(100% + 6px); z-index: 20; background: var(--card); padding: 6px; border-radius: 999px; border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); flex-basis: auto; gap: 5px; }
+  .me-row .emos.open { display: flex; animation: pop .25s var(--bounce); }
+  .emo { width: 40px; height: 40px; } .emo i { line-height: 34px; font-size: 20px; }
+  /* рука: внахлёст, при большой руке — два ряда */
+  .hand { flex-wrap: wrap; gap: 0; min-height: 0; padding-block: 6px 2px; padding-inline: 0; align-content: flex-start; }
+  .hand .card { flex: none; }
+  .hand .card.legal { transform: translateY(-5px); }
+  .hand .card.legal:active { transform: translateY(-9px) scale(1.03); }
+  .actions { min-height: 40px; gap: 8px; }
+  .actions .btn { padding: 8px 14px; font-size: 14px; }
+  .actions .hint { font-size: 11.5px; max-width: 100%; text-align: center; }
+  /* окна и всплывашки — с учётом выреза и панели навигации */
+  .modal-bg { padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px)); }
+  .modal { padding: 18px 16px 14px; border-radius: 20px; }
+  .modal h2 { font-size: 20px; } .modal h2.big { font-size: 34px; }
+  #toasts { top: max(8px, env(safe-area-inset-top, 0px)); }
+  #coach { top: calc(max(6px, env(safe-area-inset-top, 0px)) + 42px); }
+  .burst b { font-size: 30px; } .burst small { font-size: 13px; }
+  .burst::before { inset: -24px -32px; }
+}
+@media (min-width: 400px) and (max-width: 560px) {
+  .hand .card, .hand .back { width: 62px; height: 88px; }
+}
+/* низкий экран телефона */
+@media (max-width: 560px) and (max-height: 700px) {
+  .seat .ava-wrap { width: 54px; height: 60px; }
+  .seats.n4 .seat .ava-wrap, .seats.n5 .seat .ava-wrap { width: 46px; height: 52px; }
+  .seat .fan { display: none; }
+  .me-row .ava-wrap { width: 42px; height: 47px; }
+  .table { max-height: 190px; }
+  .actions { min-height: 36px; }
+  .actions .hint { display: none; }
+}
+/* меню на телефоне */
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.menu-grid .btn { padding: 14px 10px; font-size: 15px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
@@ -532,6 +631,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     <button class="btn small" id="btnRules">Правила</button>
     <button class="btn small" id="btnLore">История</button>
     <button class="btn small" id="btnNew">Новая игра</button>
+    <button class="btn small" id="btnMenu" aria-label="Меню" title="Меню">☰</button>
   </div>
   <div class="seats" id="seats"></div>
   <div class="arena">
@@ -571,6 +671,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   const CHAR_NAMES = (window.Sprite108 && window.Sprite108.LABEL) || {};
   const STYLES_M = [0, 3, 4], STYLES_F = [1, 2, 5];
   const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // внутри Android-приложения страница открыта с https://localhost — онлайн идёт на общий сервер
+  const IS_APP = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+  const SERVER = 'game-108.onrender.com';
+  const CAP = IS_APP ? (window.Capacitor.Plugins || {}) : {};
+  if (IS_APP) document.documentElement.classList.add('in-app');
   let G = null, me = 0, botTimer = null, myName = 'Игрок';
   const dlen = g => g.discardCount != null ? g.discardCount : g.discard.length;   // бита: онлайн приходит обрезанной
   let lastHandIds = new Set();
@@ -606,7 +711,9 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   })();
 
   // ---------- настройки (запоминаются) ----------
-  const settings = { sound: true, level: 'pro', mode: 'classic', bg: 'random', speed: 'normal', deck: 'random', coach: true };
+  const settings = { sound: true, level: 'pro', mode: 'classic', bg: 'random', speed: 'normal', deck: 'random', coach: true, vibro: true };
+  const CAN_VIBRATE = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+  const buzz = pattern => { try { if (settings.vibro && CAN_VIBRATE) navigator.vibrate(pattern); } catch (e) {} };
   try { Object.assign(settings, JSON.parse(localStorage.getItem('g108settings') || '{}')); } catch (e) {}
   function saveSettings() { try { localStorage.setItem('g108settings', JSON.stringify(settings)); } catch (e) {} }
   const LEVELS = [['greedy', 'Новичок'], ['eights', 'Обычный'], ['pro', 'Профи']];
@@ -686,7 +793,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const k = c.id + ':' + r, isNew = !album[k];
     album[k] = (album[k] || 0) + 1; saveAlbum();
     prof.rares = (prof.rares || 0) + 1; saveProf();
-    if (r === 'legend' || r === 'holo') { burst(r === 'legend' ? 'ЛЕГЕНДА!' : 'ГОЛОГРАММА!', 'rare-' + r, E.cardName(c)); SFX.play('tada'); }
+    if (r === 'legend' || r === 'holo') { burst(r === 'legend' ? 'ЛЕГЕНДА!' : 'ГОЛОГРАММА!', 'rare-' + r, E.cardName(c)); SFX.play('tada'); buzz([30, 40, 30, 40, 60]); }
     else if (isNew) SFX.play('select');
     if (isNew) toast(`<span class="tcard">${cardHTML(c, '', 'tabindex="-1"', r)}</span>`, `${RAR_NAME[r]} карта!`, `${E.cardName(c)} — новая в альбоме (${albumCount()}/${ALBUM_TOTAL})`, 'rare');
     coach('rare');
@@ -1012,11 +1119,21 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     txt(SHARE_URL.replace('https://', ''), 1300, 36, '#ffffff', false);
     return new Promise(res => cv.toBlob(res, 'image/png'));
   }
+  const blobToB64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
   async function shareResult(btn) {
     if (btn) btn.disabled = true;
     const text = shareText();
     let file = null;
     try { const blob = await resultImage(); if (blob) file = new File([blob], '108-result.png', { type: 'image/png' }); } catch (e) {}
+    if (IS_APP && CAP.Share) {
+      try {
+        let files;
+        if (file && CAP.Filesystem) { const w = await CAP.Filesystem.writeFile({ path: '108-result.png', data: await blobToB64(file), directory: 'CACHE' }); files = [w.uri]; }
+        await CAP.Share.share({ title: '108', text, files, dialogTitle: 'Поделиться результатом' });
+        if (btn) btn.disabled = false;
+        return;
+      } catch (e) { if (btn) btn.disabled = false; if (/cancel/i.test(String(e && (e.message || e)))) return; }
+    }
     try {
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
       if (navigator.share) { await navigator.share({ text }); return; }
@@ -1035,6 +1152,19 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   }
 
   // ---------- окна: профиль и альбом ----------
+  function showMenuModal() {
+    const bg = modal(`<h2>Меню</h2><div class="menu-grid">
+      <button class="btn" data-m="score">Счёт</button><button class="btn" data-m="log">Журнал</button>
+      <button class="btn" data-m="rules">Правила</button><button class="btn" data-m="lore">История</button>
+      <button class="btn" data-m="profile">🎖 Профиль</button><button class="btn" data-m="album">🃏 Альбом</button>
+      <button class="btn" data-m="sound">${settings.sound ? '🔇 Выключить звук' : '🔊 Включить звук'}</button>${CAN_VIBRATE ? `<button class="btn" data-m="vibro">${settings.vibro ? '📳 Без вибрации' : '📳 С вибрацией'}</button>` : ''}
+      <button class="btn primary" data-m="new" style="grid-column:1 / -1">Новая игра</button>
+    </div><div class="row"><button class="btn" data-act="close">Вернуться к игре</button></div>`);
+    const go = { score: () => G ? showScoreModal() : closeModal(), log: () => G ? showLogModal() : closeModal(), rules: () => showRulesModal(), lore: () => showLoreModal(),
+      profile: () => showProfileModal(), album: () => showAlbumModal(), sound: () => { $('btnSound').click(); showMenuModal(); }, vibro: () => { settings.vibro = !settings.vibro; saveSettings(); buzz(40); showMenuModal(); }, new: () => { closeModal(); $('btnNew').click(); } };
+    bg.querySelectorAll('[data-m]').forEach(b => b.onclick = () => go[b.dataset.m]());
+    bg.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
+  }
   function showProfileModal(back) {
     const rk = rankOf(prof.xp);
     const pct = rk.to ? Math.round((prof.xp - rk.from) / (rk.to - rk.from) * 100) : 100;
@@ -1377,7 +1507,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
         return;
       }
       for (let k = 0; k < Math.min(drew, 6); k++) setTimeout(() => SFX.play('draw', { minGap: 0 }), k * 90);
-      if (b.pending) { popAt(i, `+${drew}`, 'bad'); if (drew >= 4) shake(drew >= 6 ? 2 : 1); if (i === me && drew >= 5) unlock('big_take'); }
+      if (b.pending) { popAt(i, `+${drew}`, 'bad'); if (drew >= 4) shake(drew >= 6 ? 2 : 1); if (i === me && drew >= 5) unlock('big_take'); if (i === me) buzz(drew >= 4 ? [70, 50, 110] : 60); }
       else if (b.mustCover && drew >= 2) popAt(i, `+${drew}`, 'bad');
       if (b.pending) {                                // штраф
         const mood = drew <= 1 ? 'pout' : drew <= 3 ? 'sad' : drew <= 5 ? 'cry' : 'devastated';
@@ -1467,6 +1597,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   }
 
   const prevScores = {};
+  let wasMyTurn = false;
   const outW = () => 'вне игры';
   const ptsW = n => { const a = Math.abs(n) % 100, b = a % 10; return `${n} ${a > 10 && a < 20 ? 'очков' : b === 1 ? 'очко' : b >= 2 && b <= 4 ? 'очка' : 'очков'}`; };
   function meterHTML(score) {
@@ -1482,11 +1613,13 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     if (!G || G.phase === 'gameOver') return '';
     const id = typeof avatarSeeds[me] === 'string' ? avatarSeeds[me] : null;
     const cool = Date.now() < emoCoolUntil ? 'cool' : '';
-    return `<div class="emos" aria-label="Реакции">${EMOS.map(([m, cell, , em]) => `<button class="emo ${cool}" data-emo="${m}" title="${m === 'laugh' ? 'Посмеяться' : m === 'smug' ? 'Похвастаться' : m === 'angry' ? 'Разозлиться' : m === 'shocked' ? 'Удивиться' : 'Поплакать'}">${id && useSprites()
+    return `<button class="emo-toggle ${emoOpen ? 'on' : ''}" data-emo-toggle aria-label="Реакции" aria-expanded="${emoOpen}">😊</button><div class="emos ${emoOpen ? 'open' : ''}" aria-label="Реакции">${EMOS.map(([m, cell, , em]) => `<button class="emo ${cool}" data-emo="${m}" title="${m === 'laugh' ? 'Посмеяться' : m === 'smug' ? 'Похвастаться' : m === 'angry' ? 'Разозлиться' : m === 'shocked' ? 'Удивиться' : 'Поплакать'}">${id && useSprites()
       ? `<i style="background-image:url('sprites/${id}.webp');background-size:800% auto;background-position:${(cell * 100 / 7).toFixed(3)}% 12%"></i>` : `<i>${em}</i>`}</button>`).join('')}</div>`;
   }
   const EMO_REPLY = { laugh: ['annoyed', 'angry', 'laugh'], smug: ['annoyed', 'sly', 'evil'], angry: ['laugh', 'smug', 'shocked'], shocked: ['laugh', 'sly'], cry: ['laugh', 'evil', 'relief'] };
+  let emoOpen = false;
   function sendEmo(mood) {
+    emoOpen = false;
     if (!G || Date.now() < emoCoolUntil) return;
     emoCoolUntil = Date.now() + 1500;
     prof.emotes = (prof.emotes || 0) + 1; saveProf(); if (prof.emotes >= 15) unlock('social');
@@ -1510,6 +1643,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     $('roundChip').textContent = `партия ${G.round}`;
 
     // соперники
+    $('seats').className = 'seats n' + (G.players.length - 1);
     $('seats').innerHTML = G.players.filter(p => p.id !== me).map(p => `
       <div class="seat ${G.current === p.id && ACTIVE.has(G.phase) ? 'active' : ''} ${p.out ? 'out' : ''}" data-pid="${p.id}">
         <div class="bubble" data-bubble="${p.id}"></div>
@@ -1566,8 +1700,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       (legal.has(c.id) ? 'legal' : (myTurn && G.phase === 'play' ? 'dim' : '')) + (lastHandIds.has(c.id) ? '' : ' new'),
       `data-id="${c.id}" ${legal.has(c.id) ? '' : 'tabindex="-1"'}`)).join('');
     $('hand').style.visibility = dealing ? 'hidden' : '';
+    layoutHand();
     lastHandIds = new Set(p.hand.map(c => c.id));
     trackRares();
+    if (myTurn && !wasMyTurn && !dealing) buzz(25);
+    wasMyTurn = myTurn;
     if (!dealing && ACTIVE.has(G.phase)) {
       if (myTurn && G.phase === 'play') coach(G.pending ? 'penalty_me' : 'turn');
       if (G.finisher != null && G.finisher !== me) coach('finisher');
@@ -1597,7 +1734,29 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
 
   // ---------- летающие карты ----------
   function rectOf(sel) { const el = typeof sel === 'string' ? document.querySelector(sel) : sel; return el ? el.getBoundingClientRect() : null; }
-  function seatRect(pid) { return pid === me ? rectOf('#hand') : rectOf(`.seat[data-pid="${pid}"] .fan`); }
+  function seatRect(pid) {
+    if (pid === me) return rectOf('#hand');
+    const f = rectOf(`.seat[data-pid="${pid}"] .fan`);
+    return f && f.width ? f : rectOf(`.seat[data-pid="${pid}"] .ava-wrap`);
+  }
+  // телефон: карты в руке ложатся внахлёст, а при большой руке — в два ряда, чтобы всё помещалось в экран
+  function layoutHand() {
+    const h = $('hand'); if (!h) return;
+    h.querySelectorAll('.hand-break').forEach(x => x.remove());
+    const cards = [...h.querySelectorAll('.card')];
+    cards.forEach(c => { c.style.marginLeft = ''; c.style.marginTop = ''; c.style.zIndex = ''; });
+    if (!window.matchMedia('(max-width: 560px)').matches || !cards.length) return;
+    const W = h.clientWidth - 4, cw = cards[0].offsetWidth, ch = cards[0].offsetHeight, n = cards.length;
+    const rows = n * cw * 0.6 > W ? 2 : 1;
+    const per = Math.ceil(n / rows);
+    const step = Math.min(cw + 6, (W - cw) / Math.max(1, per - 1));
+    cards.forEach((c, i) => {
+      if (i % per) c.style.marginLeft = (step - cw) + 'px';
+      if (i >= per) c.style.marginTop = -Math.round(ch * 0.38) + 'px';
+      c.style.zIndex = String(i + 1);
+    });
+    if (rows === 2) { const br = document.createElement('div'); br.className = 'hand-break'; h.insertBefore(br, cards[per]); }
+  }
   function fly(from, to, face, opts) {
     if (REDUCED || !from || !to) return Promise.resolve();
     const o = Object.assign({ dur: 420, delay: 0, rot: 0 }, opts || {});
@@ -1908,10 +2067,10 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
 
   // ---------- онлайн: комнаты по ссылке (server.js, WebSocket /ws) ----------
   const NET = (() => {
-    const available = /^https?:$/.test(location.protocol) && !/claude\.ai$/.test(location.hostname);   // артефакт на claude.ai — без сервера
+    const available = IS_APP || (/^https?:$/.test(location.protocol) && !/claude\.ai$/.test(location.hostname));   // артефакт на claude.ai — без сервера
     const api = { available, online: false, room: null, token: null, pid: -1, lobby: null, ws: null, send: () => {}, leave: () => {} };
     let ws = null, reconnectT = null, wantRoom = null, onJoinErr = null;
-    const url = () => (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
+    const url = () => IS_APP ? `wss://${SERVER}/ws` : (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
     function saveSess() { try { if (api.room && api.token) localStorage.setItem('g108online', JSON.stringify({ room: api.room, token: api.token })); else localStorage.removeItem('g108online'); } catch (e) {} }
     function loadSess() { try { return JSON.parse(localStorage.getItem('g108online') || 'null'); } catch (e) { return null; } }
     function connect(room, token, errCb) {
@@ -1964,7 +2123,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   }
   function showLobbyModal(l) {
     const host = l.players.some(p => p.host && p.pid === NET.pid);
-    const link = location.origin + location.pathname + '?room=' + l.room;
+    const link = (IS_APP ? `https://${SERVER}/` : location.origin + location.pathname) + '?room=' + l.room;
     const existing = document.querySelector('.modal-bg[data-kind="lobby"]');
     const html = `<h2>Комната <span class="room-code">${esc(l.room)}</span></h2>
       <div class="field"><label>Ссылка для друзей</label><div class="linkrow"><input id="linkInput" readonly value="${esc(link)}"><button class="btn small" data-act="copy">Копировать</button></div></div>
@@ -2056,6 +2215,19 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   });
   $('seats').addEventListener('click', e => { const s_ = e.target.closest('.seat'); if (s_ && e.target.closest('.ava-wrap')) poke(+s_.dataset.pid); });
   $('btnProfile').onclick = () => showProfileModal();
+  $('btnMenu').onclick = () => showMenuModal();
+  if (IS_APP && CAP.App && CAP.App.addListener) {
+    CAP.App.addListener('backButton', () => {
+      const mb = document.querySelector('.modal-bg');
+      if (mb) {
+        if (mb.querySelector('#nameInput')) { CAP.App.exitApp(); return; }                 // стартовый экран — выходим
+        const c = mb.querySelector('[data-act=close], [data-act=back]');
+        if (c) c.click(); else if (!mb.dataset.auto) closeModal();
+        return;
+      }
+      if (G) showMenuModal(); else CAP.App.exitApp();
+    });
+  }
   $('btnAlbum').onclick = () => showAlbumModal();
   $('actions').addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
@@ -2068,7 +2240,10 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   $('btnScore').onclick = () => G && showScoreModal();
   $('btnRules').onclick = () => showRulesModal();
   $('btnLore').onclick = () => showLoreModal();
-  $('meRow').addEventListener('click', e => { const b = e.target.closest('[data-emo]'); if (b) sendEmo(b.dataset.emo); });
+  $('meRow').addEventListener('click', e => {
+    if (e.target.closest('[data-emo-toggle]')) { emoOpen = !emoOpen; render(); return; }
+    const b = e.target.closest('[data-emo]'); if (b) sendEmo(b.dataset.emo);
+  });
   $('btnNew').onclick = () => { if (NET.online) { if (confirm('Выйти из онлайн-комнаты?')) { NET.leave(); showStart(); } } else showStart(); };
   $('btnLog').onclick = () => G && showLogModal();
   const syncSoundBtn = () => { $('btnSound').textContent = settings.sound ? '🔊' : '🔇'; $('btnSound').title = settings.sound ? 'Звук включён' : 'Звук выключен'; };
