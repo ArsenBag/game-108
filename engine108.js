@@ -54,8 +54,10 @@
       id: i, name: p.name, isBot: !!p.isBot, strategy: p.strategy || 'pro', hand: [], score: 0, out: false,
     }));
     const seed = opts.seed == null ? (Math.random() * 2 ** 31) | 0 : opts.seed;
+    // семя оформления (колода, редкие карты) — не влияет на раздачу и не скрывается от игроков онлайн
+    const skinSeed = opts.skinSeed == null ? (Math.random() * 2 ** 31) | 0 : opts.skinSeed;
     return {
-      seed, rngState: seed,
+      seed, rngState: seed, skinSeed,
       players,
       deck: [], discard: [],
       round: 0,

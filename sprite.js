@@ -82,7 +82,7 @@
   const MOOD_RIG = {}; Object.keys(MOOD).forEach(k => { MOOD_RIG[k] = { cell: MOOD[k][0], anim: MOOD[k][1] }; });
 
   let REDUCED = false;
-  const api = { ok: true, CHARS, MALE, FEMALE, LABEL, BIO, CELLS, MOOD_RIG };
+  const api = { ok: true, CHARS, MALE, FEMALE, LABEL, BIO, CELLS, MOOD_RIG, META };
 
   function charOf(seed) {
     if (typeof seed === 'string' && META[seed]) return seed;

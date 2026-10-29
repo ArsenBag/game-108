@@ -264,6 +264,30 @@
     "what": "фон «Юрта»: монгольская юрта ночью, 16:9",
     "asset_id": "2efdf4c1-a35a-436e-a8a1-f758f7e48f44",
     "sha12": "e28bcaf41dc0"
+   },
+   {
+    "file": "bg_city.png",
+    "what": "фон «U Tower»: крыша с видом на Ташкент Сити (по фото Арсена, референс ca208f53-bfdd-400d-b945-94acf94c2736), 16:9",
+    "asset_id": "99a0f8a2-aaee-4716-bac6-664a903945db",
+    "sha12": "13f055dd4afc"
+   },
+   {
+    "file": "backs4.png",
+    "what": "4 рубашки в ряд: Ташкент Сити, Шёлковый путь, Самарканд, Космос → art/back_*.webp",
+    "asset_id": "bf35ffeb-9d61-47a4-b271-6dbf95629efe",
+    "sha12": "11181b515770"
+   },
+   {
+    "file": "legend_A.png",
+    "what": "легенды: Д♠ Гульнара, К♥ Турсун-бобо, Т♠ Дядя Вали, В♦ MC Шох → art/legend_*.webp",
+    "asset_id": "e65f4a9e-98fa-42bd-ba31-d244bbea12a0",
+    "sha12": "fe82f22fe8c8"
+   },
+   {
+    "file": "legend_B.png",
+    "what": "легенды: Д♥ Холида-опа, К♠ Алишер-полвон, Т♥ Ильхом-ака, В♣ Нилуфар → art/legend_*.webp",
+    "asset_id": "d3d3e22f-d8e2-453f-8470-671f4f111cf5",
+    "sha12": "a1bcebd0367b"
    }
   ]
  }

@@ -26,7 +26,8 @@ const E = require('./engine108.js');
 const PORT = process.env.PORT || 3108;
 const ROOT = __dirname;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json', '.webp': 'image/webp', '.png': 'image/png',
-  '.mp3': 'audio/mpeg', '.css': 'text/css', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.md': 'text/plain; charset=utf-8' };
+  '.mp3': 'audio/mpeg', '.css': 'text/css', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.md': 'text/plain; charset=utf-8',
+  '.jpg': 'image/jpeg', '.webmanifest': 'application/manifest+json' };
 const STATIC_DIRS = ['art', 'sprites', 'sfx'];
 const CHAR_NAMES = { m01: 'Санжар', m02: 'Тимур', m03: 'Рустам', m04: 'Шерзод', m05: 'Азиз', m06: 'Бахтиёр', m07: 'Джавохир',
   m08: 'Ильхом-ака', m09: 'Равшан', m10: 'MC Шох', m11: 'Фаррух', m12: 'Шавкат-ошпаз', m13: 'Алишер-полвон', m14: 'Турсун-бобо', m15: 'Дядя Вали',
@@ -41,10 +42,11 @@ const MAX_PLAYERS = 6;
 const server = http.createServer((req, res) => {
   let url = decodeURIComponent((req.url || '/').split('?')[0]);
   if (url === '/' || url === '/index.html') url = '/108.html';
+  if (url === '/favicon.ico') url = '/art/icon-192.png';
   if (url === '/health') { res.writeHead(200, { 'Content-Type': 'text/plain' }); return res.end('ok'); }
   const rel = path.normalize(url).replace(/^(\.\.[\/\\])+/, '');
   const top = rel.split(/[\/\\]/).filter(Boolean)[0];
-  const allowed = rel === '/108.html' || rel === '\\108.html' || STATIC_DIRS.includes(top);
+  const allowed = rel === '/108.html' || rel === '\\108.html' || rel === '/manifest.webmanifest' || rel === '\\manifest.webmanifest' || STATIC_DIRS.includes(top);
   const file = path.join(ROOT, rel);
   if (!allowed || !file.startsWith(ROOT)) { res.writeHead(404); return res.end('not found'); }
   fs.stat(file, (err, st) => {

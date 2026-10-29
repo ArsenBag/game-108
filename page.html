@@ -1,4 +1,17 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Карточная игра 108</title>
+<meta name="description" content="«108» — карточная игра из ташкентских дворов: 25 героев с эмоциями, редкие карты, партия дня. Играй с ботами или с друзьями онлайн.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="108 — карточная игра из чайханы">
+<meta property="og:description" content="25 героев, редкие и легендарные карты, партия дня и режим на выбывание. Играй с друзьями онлайн.">
+<meta property="og:image" content="https://game-108.onrender.com/art/og.jpg">
+<meta property="og:url" content="https://game-108.onrender.com/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0f4c4c">
+<link rel="icon" type="image/png" href="art/icon-192.png">
+<link rel="apple-touch-icon" href="art/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@700;900&family=Nunito:wght@600;800&display=swap">
 <style>
@@ -306,6 +319,116 @@ b.bump { display: inline-block; animation: bump .6s var(--bounce); color: var(--
 .winner .ava-wrap { width: 110px; height: 124px; }
 .elim-list { margin: 0 0 10px; padding-left: 20px; font-size: 14px; }
 
+/* ---- колоды: рубашка и оттенок лица карты ---- */
+.art-ok .back { background-image: var(--back-img, url("art/back.webp")); }
+body[data-deck="city"] .card { --card: #f3f7ff; --card-shade: rgba(70, 90, 210, .16); }
+body[data-deck="silk"] .card { --card: #fff4de; --card-shade: rgba(170, 100, 20, .18); }
+body[data-deck="samarkand"] .card { --card: #f2fbff; --card-shade: rgba(20, 130, 180, .17); }
+body[data-deck="cosmos"] .card { --card: #f6f2ff; --card-shade: rgba(120, 70, 210, .17); }
+/* ---- редкие версии карт ---- */
+.card.rar-silver { background-image: linear-gradient(135deg, #fbfcff 0%, #d8dee9 32%, #ffffff 50%, #c9d1df 68%, #f3f5fa 100%); }
+.card.rar-gold { background-image: linear-gradient(135deg, #fff7d9 0%, #ffd767 30%, #fff4c7 50%, #f0bd45 70%, #fff0b8 100%); }
+.card.rar-holo { background-image: linear-gradient(135deg, #ffe3f7, #e3f6ff 35%, #fffbd6 65%, #e6ffe9); overflow: hidden; }
+.card.rar-silver::before, .card.rar-gold::before, .card.rar-holo::before {
+  content: "✦"; position: absolute; right: 5px; top: 3px; font-size: 13px; line-height: 1; z-index: 2; font-family: var(--font-body); }
+.card.rar-silver::before { color: #8b97ad; } .card.rar-gold::before { color: #c98a00; }
+.card.rar-holo::before { color: #d63fb8; animation: holo-hue 3s linear infinite; }
+.card.rar-silver { box-shadow: inset 0 0 0 2px #aeb9cc, 4px 4px 0 var(--ink); }
+.card.rar-gold { box-shadow: inset 0 0 0 3px #e2a72b, 0 0 10px 1px rgba(255, 201, 60, .55), 4px 4px 0 var(--ink); }
+.card.rar-holo { box-shadow: inset 0 0 0 3px #c66ff0, 0 0 12px 2px rgba(150, 120, 255, .5), 4px 4px 0 var(--ink); }
+.card.rar-holo::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(115deg, transparent 18%, rgba(255, 60, 200, .32) 32%, rgba(60, 220, 255, .34) 46%, rgba(255, 240, 60, .32) 60%, rgba(120, 255, 140, .28) 72%, transparent 86%);
+  background-size: 260% 260%; mix-blend-mode: multiply; animation: holo-move 3.2s linear infinite; }
+@keyframes holo-move { from { background-position: 100% 0; } to { background-position: -160% 0; } }
+@keyframes holo-hue { to { filter: hue-rotate(360deg); } }
+.card.rar-legend { background: #241d3a; box-shadow: 0 0 0 3px #ffd34d, 0 0 16px 4px rgba(255, 211, 77, .65), 4px 4px 0 3px var(--ink); animation: legend-glow 1.4s ease-in-out infinite alternate; overflow: hidden; }
+.card.rar-legend .center { display: none; }
+.card.rar-legend .legend-art { position: absolute; inset: 0; border-radius: inherit; background: center 40% / cover no-repeat; }
+.card.rar-legend .corner { z-index: 2; background: rgba(255, 252, 240, .94); border-radius: 7px; padding: 3px 3px 2px; box-shadow: 1px 1px 0 var(--ink); }
+.card.rar-legend::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .45) 45%, transparent 60%); background-size: 300% 100%; animation: holo-move 2.6s linear infinite; }
+@keyframes legend-glow { to { box-shadow: 0 0 0 3px #fff2b0, 0 0 26px 8px rgba(255, 211, 77, .85), 4px 4px 0 3px var(--ink); } }
+.hand .card.legal.rar-legend, .hand .card.legal.rar-holo, .hand .card.legal.rar-gold { box-shadow: 0 0 0 4px var(--sun), 0 0 18px 4px rgba(255, 211, 77, .7), 4px 4px 0 4px var(--ink); }
+.burst.rare-legend { --c: linear-gradient(135deg, #ffd34d, #ff6b6b, #c66ff0); }
+.burst.rare-legend::before, .burst.rare-holo::before { background: linear-gradient(135deg, #ffd34d, #ff6bd5, #5ad7ff); }
+/* ---- всплывашки ---- */
+#toasts { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 60; pointer-events: none; display: grid; gap: 8px; }
+.toast { display: flex; align-items: center; gap: 12px; min-width: 260px; max-width: min(420px, 92vw); padding: 10px 14px; border-radius: 16px; background: var(--card);
+  border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); color: var(--ink); animation: toast-in .45s cubic-bezier(.2, 1.4, .4, 1); }
+.toast.out { animation: toast-out .35s ease-in forwards; }
+.toast .ti { font-size: 30px; line-height: 1; flex: none; display: grid; place-items: center; min-width: 40px; }
+.toast b { display: block; font-family: var(--font-display); font-size: 15px; }
+.toast small { display: block; font-size: 13px; color: #4b4858; }
+.toast.ach { background: #fff3cf; } .toast.rank { background: linear-gradient(135deg, #fff3cf, #ffd34d); } .toast.rare { background: #f3ecff; }
+.toast .tcard { display: block; width: 40px; height: 57px; position: relative; }
+.toast .tcard .card { transform: scale(.555); transform-origin: top left; position: absolute; left: 0; top: 0; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-30px) scale(.8); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(-20px) scale(.9); } }
+/* ---- подсказки аксакала ---- */
+#coach { position: fixed; left: 14px; bottom: 14px; z-index: 55; display: flex; align-items: flex-end; gap: 6px; max-width: min(340px, calc(100vw - 28px));
+  transform: translateY(140%); opacity: 0; transition: transform .45s cubic-bezier(.2, 1.3, .4, 1), opacity .3s; pointer-events: none; }
+#coach.show { transform: none; opacity: 1; pointer-events: auto; }
+#coach .c-ava { flex: none; } #coach .c-ava .ava-wrap { width: 78px; height: 88px; }
+#coach .c-box { background: var(--card); color: var(--ink); border: 3px solid var(--ink); border-radius: 16px 16px 16px 4px; box-shadow: 4px 4px 0 var(--ink); padding: 9px 12px; margin-bottom: 18px; }
+#coach .c-box b { font-family: var(--font-display); font-size: 13px; color: #8a5a00; }
+#coach .c-box p { margin: 3px 0 8px; font-size: 14px; line-height: 1.35; }
+#coach .c-row { display: flex; align-items: center; gap: 12px; }
+#coach .c-row a { font-size: 12px; color: #6b6878; }
+@media (max-width: 560px) { #coach { top: 70px; bottom: auto; max-width: calc(100vw - 28px); transform: translateY(-160%); } #coach.show { transform: none; } #coach .c-ava .ava-wrap { width: 58px; height: 66px; } #coach .c-box { margin-bottom: 0; } }
+.hand .card.nope { animation: nope .35s; }
+@keyframes nope { 20%, 60% { transform: translateX(-6px) rotate(-3deg); } 40%, 80% { transform: translateX(6px) rotate(3deg); } }
+/* ---- байка в окне партии ---- */
+.tip.story { display: flex; gap: 10px; align-items: center; border-style: solid; background: #f3ecff; }
+.tip.story .ava-wrap { width: 58px; height: 66px; flex: none; }
+/* ---- старт: быстрые кнопки, колоды ---- */
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 12px; }
+.qbtn { display: grid; justify-items: center; gap: 2px; padding: 8px 6px; border: 3px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink); box-shadow: 0 3px 0 var(--ink); font: inherit; cursor: pointer; text-align: center; }
+.qbtn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.qbtn .qi { font-size: 22px; line-height: 1; } .qbtn b { font-family: var(--font-display); font-size: 13px; line-height: 1.15; } .qbtn small { font-size: 11px; color: #6b6878; line-height: 1.2; }
+.qbtn.daily { background: linear-gradient(135deg, #fff3cf, #ffd34d); }
+.qbtn.daily.done { background: #e9f8ee; }
+.first-note { font-size: 13px; background: #e9f8ee; border: 2px dashed var(--ink); border-radius: 12px; padding: 7px 10px; margin: 0 0 10px; }
+.decks { display: flex; gap: 6px; flex-wrap: wrap; }
+.deck-btn { width: 52px; height: 70px; border-radius: 9px; border: 3px solid var(--ink); background: center / cover no-repeat; padding: 0; position: relative; box-shadow: 0 3px 0 var(--ink); }
+.deck-btn span { position: absolute; left: -3px; right: -3px; bottom: -3px; font-size: 9px; font-weight: 800; color: #fff; background: rgba(29, 26, 46, .82); border-radius: 0 0 8px 8px; padding: 1px 0; line-height: 1.2; }
+.deck-btn.on { outline: 4px solid var(--sun); outline-offset: 1px; }
+.deck-btn.rnd { background: repeating-linear-gradient(45deg, #9b59b6 0 8px, #4f7bd9 8px 16px); }
+/* ---- профиль ---- */
+.rankbox { display: flex; gap: 12px; align-items: center; background: linear-gradient(135deg, #fff3cf, #ffe08a); border: 3px solid var(--ink); border-radius: 16px; padding: 10px 14px; box-shadow: 3px 3px 0 var(--ink); }
+.rankbox .rk-ico { font-size: 40px; } .rankbox b { font-family: var(--font-display); font-size: 18px; } .rankbox small { font-size: 12px; color: #4b4858; }
+.xpbar { height: 10px; border-radius: 99px; background: rgba(0, 0, 0, .12); border: 2px solid var(--ink); overflow: hidden; margin: 5px 0 3px; min-width: 180px; }
+.xpbar i { display: block; height: 100%; background: linear-gradient(90deg, #8de3a5, #ffc93c); }
+.stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 12px 0 4px; }
+.stat { text-align: center; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 2px; }
+.stat b { display: block; font-family: var(--font-display); font-size: 18px; } .stat small { font-size: 11px; color: #6b6878; }
+@media (max-width: 560px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+.sub-h { font-family: var(--font-display); font-size: 15px; margin: 12px 0 6px; }
+.achs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; max-height: 320px; overflow: auto; padding: 2px; }
+.ach { display: grid; grid-template-columns: 32px 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: center; padding: 6px 8px; border-radius: 12px; border: 2px dashed #b9b4c6; background: #f4f2f8; opacity: .62; filter: grayscale(1); }
+.ach span { grid-row: 1 / 3; font-size: 22px; text-align: center; } .ach b { font-size: 12px; line-height: 1.2; } .ach small { font-size: 10.5px; color: #6b6878; line-height: 1.2; }
+.ach.on { opacity: 1; filter: none; border: 2px solid var(--ink); background: #fff3cf; box-shadow: 2px 2px 0 var(--ink); }
+/* ---- альбом ---- */
+.note-s { font-size: 13px; color: #4b4858; margin: 0 0 10px; }
+.seg.tabs { flex-wrap: wrap; margin-bottom: 10px; } .seg.tabs small { font-size: 11px; opacity: .75; }
+.album { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; max-height: 360px; overflow: auto; padding: 4px; }
+.album.leg { grid-template-columns: repeat(4, 1fr); }
+.acell { position: relative; width: 50px; height: 71px; margin: 0 auto; }
+.acell .card { transform: scale(.695); transform-origin: top left; position: absolute; left: 0; top: 0; pointer-events: none; }
+.album.leg .acell { width: 86px; height: 122px; } .album.leg .acell .card { transform: scale(1.195); }
+.acell.locked .back { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .28; filter: grayscale(1); box-shadow: 2px 2px 0 var(--ink); border-radius: 8px; }
+.acell.locked i { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-family: var(--font-display); font-weight: 900; font-size: 22px; color: #6b6878; }
+.acell .acnt { position: absolute; right: -4px; bottom: -4px; font-style: normal; font-size: 10px; font-weight: 900; background: var(--sun); border: 2px solid var(--ink); border-radius: 99px; padding: 0 4px; }
+@media (max-width: 560px) { .album { grid-template-columns: repeat(6, 1fr); } .album.leg { grid-template-columns: repeat(2, 1fr); } }
+/* ---- лор: вкладки ---- */
+.lore .facts { margin: 0; padding-left: 18px; } .lore .facts li { margin-bottom: 6px; }
+.baiki { display: grid; gap: 8px; }
+.baika { display: flex; gap: 10px; align-items: center; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 10px; }
+.baika .ava-wrap { width: 50px; height: 56px; flex: none; }
+.baika.locked { border-style: dashed; opacity: .6; } .baika.locked .ava-wrap { filter: grayscale(1) brightness(.6); }
+.baika b { font-size: 13px; } .baika p { margin: 2px 0 0; font-size: 13px; }
+.seat .ava-wrap { cursor: pointer; }
+.share-btn { background: linear-gradient(135deg, #8de3a5, #5ad7ff) !important; }
+
 /* ---- летающие карты ---- */
 .fx { position: fixed; inset: 0; pointer-events: none; z-index: 15; }
 .fx .card, .fx .back { position: absolute; left: 0; top: 0; margin: 0; }
@@ -333,7 +456,7 @@ b.bump { display: inline-block; animation: bump .6s var(--bounce); color: var(--
 .suit-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
 .suit-btn small { display: block; font-family: var(--font-body); font-size: 12px; font-weight: 800; margin-top: 6px; }
 .offer { display: flex; align-items: center; gap: 18px; }
-table.score { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.score { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; color: inherit; font-size: inherit; font-weight: inherit; line-height: inherit; }
 table.score th, table.score td { padding: 7px 8px; text-align: left; border-bottom: 2px solid rgba(29,26,46,.12); vertical-align: top; }
 table.score th { font-size: 12px; font-weight: 800; color: #6b6878; }
 table.score td.num { text-align: right; font-weight: 800; }
@@ -402,6 +525,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     <div class="net-status" id="netStatus" hidden></div>
     <div class="spacer"></div>
     <button class="btn small" id="btnSound" aria-label="Звук" title="Звук">🔊</button>
+    <button class="btn small" id="btnProfile" title="Профиль и достижения" aria-label="Профиль">🎖</button>
+    <button class="btn small" id="btnAlbum" title="Альбом карт" aria-label="Альбом">🃏</button>
     <button class="btn small" id="btnLog">Журнал</button>
     <button class="btn small" id="btnScore">Счёт</button>
     <button class="btn small" id="btnRules">Правила</button>
@@ -481,7 +606,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   })();
 
   // ---------- настройки (запоминаются) ----------
-  const settings = { sound: true, level: 'pro', mode: 'classic', bg: 'random', speed: 'normal' };
+  const settings = { sound: true, level: 'pro', mode: 'classic', bg: 'random', speed: 'normal', deck: 'random', coach: true };
   try { Object.assign(settings, JSON.parse(localStorage.getItem('g108settings') || '{}')); } catch (e) {}
   function saveSettings() { try { localStorage.setItem('g108settings', JSON.stringify(settings)); } catch (e) {} }
   const LEVELS = [['greedy', 'Новичок'], ['eights', 'Обычный'], ['pro', 'Профи']];
@@ -490,10 +615,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   const SPD = () => settings.speed === 'fast' ? .6 : 1;
   // места за столом (фоны SpriteCook)
   const SCENES = [['chaikhana', 'Чайхана', 'art/bg.webp', 'art/bg_t.webp'], ['train', 'Поезд', 'art/bg_train.webp', 'art/bg_train_t.webp'],
-    ['yard', 'Махалля', 'art/bg_yard.webp', 'art/bg_yard_t.webp'], ['roof', 'Крыша', 'art/bg_roof.webp', 'art/bg_roof_t.webp'], ['yurt', 'Юрта', 'art/bg_yurt.webp', 'art/bg_yurt_t.webp']];
+    ['yard', 'Махалля', 'art/bg_yard.webp', 'art/bg_yard_t.webp'], ['roof', 'Крыша', 'art/bg_roof.webp', 'art/bg_roof_t.webp'], ['yurt', 'Юрта', 'art/bg_yurt.webp', 'art/bg_yurt_t.webp'],
+    ['city', 'U Tower', 'art/bg_city.webp', 'art/bg_city_t.webp']];
   let sceneNow = null;
-  function applyScene(force) {
-    let id = settings.bg;
+  function applyScene(force, fixed) {
+    let id = fixed || settings.bg;
     if (id === 'random' || !SCENES.some(x => x[0] === id)) {
       if (sceneNow && !force) return;
       const pool = SCENES.filter(x => x[0] !== sceneNow); id = pool[Math.floor(Math.random() * pool.length)][0];
@@ -503,6 +629,442 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const im = new Image(); im.onload = () => document.body.style.setProperty('--scene', `url("${sc[2]}")`); im.src = sc[2];
     document.body.dataset.scene = id;
   }
+  // =====================================================================================
+  // ---------- коллекция: колоды, редкие версии карт, альбом ----------
+  const DECKS = [['chaikhana', 'Чайхана', 'art/back.webp'], ['city', 'Ташкент Сити', 'art/back_city.webp'], ['silk', 'Шёлковый путь', 'art/back_silk.webp'],
+    ['samarkand', 'Самарканд', 'art/back_samarkand.webp'], ['cosmos', 'Космос', 'art/back_cosmos.webp']];
+  let deckNow = null;
+  function deckIdFor(g) {
+    if (settings.deck && settings.deck !== 'random' && DECKS.some(d => d[0] === settings.deck)) return settings.deck;
+    const s = g && g.skinSeed != null ? Math.abs(g.skinSeed) : 0;
+    return DECKS[s % DECKS.length][0];
+  }
+  function applyDeck() {
+    const id = deckIdFor(G);
+    if (id === deckNow) return;
+    deckNow = id;
+    const d = DECKS.find(x => x[0] === id);
+    document.body.dataset.deck = id;
+    document.body.style.setProperty('--back-img', `url("${d[2]}")`);
+  }
+  // редкость считается по «семени оформления» игры, номеру партии и карте — у всех за столом одинаково
+  const LEGEND_IDS = new Set(['QS', 'KH', 'AS', 'JD', 'QH', 'KS', 'AH', 'JC']);
+  const LEGEND_HERO = { QS: 'f09', KH: 'm14', AS: 'm15', JD: 'm10', QH: 'f07', KS: 'm13', AH: 'm08', JC: 'f10' };
+  const RAR_NAME = { silver: 'Серебряная', gold: 'Золотая', holo: 'Голограмма', legend: 'Легенда' };
+  const RAR_ORDER = ['legend', 'holo', 'gold', 'silver'];
+  function h01(s) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15;
+    return (h >>> 0) / 4294967296;
+  }
+  function rarityOf(c) {
+    if (!G || !c || c.rank === '?' || G.skinSeed == null) return '';
+    const k = G.skinSeed + ':' + G.round + ':' + c.id;
+    if (LEGEND_IDS.has(c.id) && h01(k + ':L') < 0.025) return 'legend';
+    const r = h01(k + ':R');
+    return r < 0.01 ? 'holo' : r < 0.035 ? 'gold' : r < 0.09 ? 'silver' : '';
+  }
+  const album = (() => { try { return JSON.parse(localStorage.getItem('g108album') || '{}'); } catch (e) { return {}; } })();
+  const saveAlbum = () => { try { localStorage.setItem('g108album', JSON.stringify(album)); } catch (e) {} };
+  const ALBUM_TOTAL = LEGEND_IDS.size + 36 * 3;
+  const albumCount = () => Object.keys(album).length;
+  const rareSeen = new Set();
+  function trackRares() {
+    if (!G || dealing || G.skinSeed == null) return;
+    const list = G.players[me].hand.slice();
+    const t = G.discard.length ? E.top(G) : null; if (t) list.push(t);
+    list.forEach(c => {
+      const r = rarityOf(c); if (!r) return;
+      const key = `${G.skinSeed}:${G.round}:${c.id}`;
+      if (rareSeen.has(key)) return;
+      rareSeen.add(key);
+      foundRare(c, r);
+    });
+  }
+  function foundRare(c, r) {
+    const k = c.id + ':' + r, isNew = !album[k];
+    album[k] = (album[k] || 0) + 1; saveAlbum();
+    prof.rares = (prof.rares || 0) + 1; saveProf();
+    if (r === 'legend' || r === 'holo') { burst(r === 'legend' ? 'ЛЕГЕНДА!' : 'ГОЛОГРАММА!', 'rare-' + r, E.cardName(c)); SFX.play('tada'); }
+    else if (isNew) SFX.play('select');
+    if (isNew) toast(`<span class="tcard">${cardHTML(c, '', 'tabindex="-1"', r)}</span>`, `${RAR_NAME[r]} карта!`, `${E.cardName(c)} — новая в альбоме (${albumCount()}/${ALBUM_TOTAL})`, 'rare');
+    coach('rare');
+    unlock('rare1');
+    if (r === 'holo') unlock('holo');
+    if (r === 'legend') unlock('legend');
+    if (albumCount() >= 25) unlock('collector');
+  }
+
+  // ---------- профиль: опыт, звания, достижения ----------
+  const prof = Object.assign({ xp: 0, games: 0, wins: 0, rounds: 0, closes: 0, skips: 0, emotes: 0, pokes: 0, rares: 0,
+    ach: {}, places: {}, decks: {}, stories: {}, coach: {}, daily: {}, lastRound: '', lastGame: '' },
+  (() => { try { return JSON.parse(localStorage.getItem('g108prof') || '{}'); } catch (e) { return {}; } })());
+  function saveProf() { try { localStorage.setItem('g108prof', JSON.stringify(prof)); } catch (e) {} }
+  const RANKS = [[0, 'Новичок махалли'], [150, 'Знаток чайханы'], [500, 'Гроза двора'], [1100, 'Мастер 108'], [2200, 'Аксакал стола'], [4000, 'Легенда Ташкента']];
+  function rankOf(xp) {
+    let i = 0; RANKS.forEach((r, k) => { if (xp >= r[0]) i = k; });
+    return { i, name: RANKS[i][1], from: RANKS[i][0], to: RANKS[i + 1] ? RANKS[i + 1][0] : null, next: RANKS[i + 1] ? RANKS[i + 1][1] : null };
+  }
+  function addXP(n) {
+    const before = rankOf(prof.xp).i; prof.xp += n; saveProf();
+    const after = rankOf(prof.xp);
+    if (after.i > before) setTimeout(() => { toast('🎖', 'Новое звание!', after.name, 'rank'); SFX.play('tada'); }, 1200);
+  }
+  const ACH = [
+    ['first_round', '🃏', 'Первая партия', 'Доиграть первую партию'],
+    ['first_win', '🏆', 'Чемпион махалли', 'Выиграть игру'],
+    ['close_q', '💃', 'Дамский угодник', 'Закрыть партию дамой'],
+    ['close_qs', '♠️', 'Пиковая дама', 'Закрыть партию пиковой дамой: −40'],
+    ['reset', '🔄', 'Ровно 107', 'Обнулить счёт на 107'],
+    ['chain', '🔗', 'Цепная реакция', 'Довести цепочку штрафов до 4 карт'],
+    ['nine', '🛡', 'Щит девятки', 'Отбить короля червей девяткой червей'],
+    ['returner', '🪃', 'Возвращатель', 'Вернуть в игру того, кто уже вышел'],
+    ['big_take', '🐘', 'Полные руки', 'Взять 5 и больше карт за раз'],
+    ['skipper', '⏭', 'Пропускай!', 'Пропустить соперников тузами 15 раз'],
+    ['closer', '🎯', 'Мастер закрытия', 'Закрыть 10 партий'],
+    ['elim_win', '🦁', 'Последний герой', 'Победить в режиме на выбывание'],
+    ['close_call', '😅', 'На волоске', 'Победить, имея 90 очков и больше'],
+    ['daily', '🗓', 'Партия дня', 'Сыграть партию дня'],
+    ['rare1', '✨', 'Первая редкость', 'Найти редкую карту'],
+    ['holo', '🌈', 'Голограмма', 'Найти голографическую карту'],
+    ['legend', '👑', 'Легенда', 'Найти легендарную карту с героем'],
+    ['collector', '📚', 'Коллекционер', 'Собрать 25 карт в альбом'],
+    ['traveler', '🧳', 'Путешественник', 'Сыграть во всех шести местах'],
+    ['decks', '🎴', 'Все колоды', 'Сыграть всеми пятью колодами'],
+    ['social', '💬', 'Душа компании', 'Отправить 15 реакций'],
+    ['poke', '👉', 'Не трогай!', 'Потыкать героев 10 раз'],
+    ['online', '🌐', 'С друзьями', 'Доиграть онлайн-игру'],
+    ['historian', '📜', 'Историк', 'Открыть историю «108»'],
+    ['stories', '📖', 'Слушатель', 'Услышать 10 баек'],
+  ];
+  function unlock(id) {
+    if (prof.ach[id]) return;
+    const a = ACH.find(x => x[0] === id); if (!a) return;
+    prof.ach[id] = Date.now(); saveProf();
+    toast(a[1], 'Достижение!', a[2], 'ach'); SFX.play('tada');
+    addXP(30);
+  }
+  // всплывающие карточки (достижения, редкие карты, звания)
+  const toastQ = [];
+  let toastBusy = false;
+  function toast(icon, title, sub, kind) { toastQ.push([icon, title, sub, kind]); if (!toastBusy) nextToast(); }
+  function nextToast() {
+    const t = toastQ.shift(); if (!t) { toastBusy = false; return; }
+    toastBusy = true;
+    let host = document.getElementById('toasts');
+    if (!host) { host = document.createElement('div'); host.id = 'toasts'; document.body.appendChild(host); }
+    const el = document.createElement('div'); el.className = 'toast ' + (t[3] || '');
+    el.innerHTML = `<div class="ti">${t[0]}</div><div><b>${esc(t[1])}</b><small>${esc(t[2])}</small></div>`;
+    host.appendChild(el);
+    setTimeout(() => el.classList.add('out'), 3000);
+    setTimeout(() => { el.remove(); nextToast(); }, 3400);
+  }
+  // учёт событий для статистики и достижений (зовётся из reactToDiff — и офлайн, и онлайн)
+  function trackPlay(b, c, actor) {
+    if (actor !== me || !c) return;
+    if (c.rank === 'A') { prof.skips = (prof.skips || 0) + 1; saveProf(); if (prof.skips >= 15) unlock('skipper'); }
+    if (c.rank === '9' && c.suit === 'H' && b.pending && b.pending.kind === 'K') unlock('nine');
+    if (G.pending && G.pending.count >= 4) unlock('chain');
+  }
+  function trackRoundEnd() {
+    const r = G.lastRound; if (!r) return;
+    const key = `${G.skinSeed}|${G.round}`;
+    if (prof.lastRound === key) return;
+    prof.lastRound = key;
+    prof.rounds++; addXP(10);
+    unlock('first_round');
+    const mine = r.results.find(x => x.idx === me);
+    if (r.finisher === me && mine) {
+      prof.closes++; addXP(20);
+      if (mine.pts < 0) unlock('close_q');
+      if (mine.pts <= -40) unlock('close_qs');
+      if (prof.closes >= 10) unlock('closer');
+    }
+    if (mine && mine.reset) unlock('reset');
+    saveProf();
+    if (G.phase === 'gameOver' && prof.lastGame !== String(G.skinSeed)) {
+      prof.lastGame = String(G.skinSeed);
+      prof.games++; addXP(20);
+      const won = G.mode === 'elim' ? G.winner === me : !G.losers.includes(me);
+      if (won) {
+        prof.wins++; addXP(60); unlock('first_win');
+        if (G.mode === 'elim') unlock('elim_win');
+        if (G.players[me].score >= 90) unlock('close_call');
+      }
+      if (NET.online) unlock('online');
+      if (G.daily && !prof.daily[G.daily]) { prof.daily[G.daily] = { score: G.players[me].score, won, rounds: G.round }; addXP(40); unlock('daily'); }
+      saveProf();
+    }
+  }
+  function trackGameStart() {
+    if (sceneNow) prof.places[sceneNow] = 1;
+    if (deckNow) prof.decks[deckNow] = 1;
+    saveProf();
+    if (Object.keys(prof.places).length >= SCENES.length) unlock('traveler');
+    if (Object.keys(prof.decks).length >= DECKS.length) unlock('decks');
+  }
+
+  // ---------- подсказки аксакала: Турсун-бобо объясняет правила по ходу первой игры ----------
+  const COACH = {
+    welcome: 'Ассалому алейкум! Я Турсун-бобо, подскажу по ходу игры. Цель простая: избавляйся от карт и не набери 108 очков.',
+    turn: 'Твой ход, внучок. Клади карту той же масти или того же достоинства — подходящие подсвечены. Нечем ходить — возьми из колоды.',
+    penalty_me: 'На тебя штраф! Отбейся такой же картой — она подсвечена — или бери карты.',
+    c6: 'Шестёрка! Следующий берёт карту — или отбивается своей шестёркой, и тогда брать будет уже следующий, и больше.',
+    c7: 'Семёрка — как шестёрка, только берут по две.',
+    cK: 'Король червей! Берут пять карт. Спасает только девятка червей — береги её.',
+    cA: 'Туз — следующий игрок пропускает ход.',
+    cQ: 'Даму кладут на любую карту, и она заказывает масть. Закроешь партию дамой — минус 20, пиковой — минус 40!',
+    c8: 'Восьмёрку надо сразу покрыть: той же мастью, дамой или другой восьмёркой. Нечем — тянешь из колоды, пока не покроешь.',
+    finisher: 'Вышел картой, которая действует, — партия ещё не кончилась! Если штраф вернётся к нему, он снова в игре.',
+    round: 'Партия кончилась. Что осталось на руках — идёт в счёт: туз 11, десятка 10, девятка 0. Ровно 107 — счёт обнуляется!',
+    rare: 'Ого, редкая карта! Серебро, золото, голограммы и легенды с героями выпадают случайно — собирай альбом.',
+    danger: 'Осторожно, до 108 рукой подать. Сбрасывай тузы и десятки первыми.',
+  };
+  const coachQ = [];
+  let coachBusy = false, coachTimer = null;
+  function coach(key, text, now) {
+    if (!settings.coach) return;
+    if (key) { if (prof.coach[key]) return; prof.coach[key] = 1; saveProf(); }
+    const item = { text: text || COACH[key], over: key === 'round' || !!now };   // over — можно показывать поверх окна
+    if (now) { coachQ.unshift(item); clearTimeout(coachTimer); nextCoach(); return; }   // ответ на действие игрока — сразу, без очереди
+    coachQ.push(item);
+    if (!coachBusy) nextCoach();
+  }
+  function nextCoach() {
+    const item = coachQ.shift();
+    let el = document.getElementById('coach');
+    if (!item) { coachBusy = false; if (el) el.classList.remove('show'); return; }
+    coachBusy = true;
+    if (!item.over && document.querySelector('.modal-bg')) {          // открыто окно — подсказка подождёт
+      coachQ.unshift(item); if (el) el.classList.remove('show');
+      clearTimeout(coachTimer); coachTimer = setTimeout(nextCoach, 1200); return;
+    }
+    const text = item.text;
+    if (!el) {
+      el = document.createElement('div'); el.id = 'coach'; el.setAttribute('role', 'status');
+      document.body.appendChild(el);
+      el.addEventListener('click', e => {
+        if (e.target.closest('[data-coach=off]')) { settings.coach = false; saveSettings(); coachQ.length = 0; }
+        clearTimeout(coachTimer); el.classList.remove('show'); setTimeout(nextCoach, 250);
+      });
+    }
+    el.innerHTML = `<div class="c-ava">${avatar('m14', 'think')}</div><div class="c-box"><b>Турсун-бобо</b><p>${esc(text)}</p><div class="c-row"><button class="btn small primary">Понятно</button><a href="#" data-coach="off">без подсказок</a></div></div>`;
+    requestAnimationFrame(() => el.classList.add('show'));
+    clearTimeout(coachTimer);
+    coachTimer = setTimeout(() => { el.classList.remove('show'); setTimeout(nextCoach, 300); }, Math.max(6500, text.length * 70));
+  }
+  // почему эту карту нельзя
+  function explainIllegal(id) {
+    const c = G.players[me].hand.find(x => x.id === id); if (!c) return;
+    const t = E.top(G);
+    let msg;
+    if (G.pending) msg = G.pending.kind === 'K' ? 'На тебе король червей: спасает только девятка червей. Нет её — бери пять.' : `Сейчас штраф: отбиться можно только ${G.pending.kind === '6' ? 'шестёркой' : 'семёркой'}. Или бери карты.`;
+    else if (G.mustCover) msg = `Сначала покрой восьмёрку: ${E.SUIT_SYM[G.mustCover]}, дама или восьмёрка.`;
+    else if (G.aceTarget) msg = 'Ты под тузом: отбейся тузом или картой той же масти — или пропусти ход.';
+    else msg = `${E.cardName(c)} сюда не ляжет. Нужна масть ${E.SUIT_SYM[E.effSuit(G)]}${t.rank === 'Q' && G.chosenSuit ? ' (её заказали дамой)' : ` или достоинство ${E.RANK_RU[t.rank]}`} — или дама.`;
+    coach(null, msg, true);
+  }
+
+  // ---------- факты (проверенные) и байки героев (выдуманные, для настроения) ----------
+  const FACTS = [
+    'Игральные карты пришли в Европу в 1370-х: их везли в средиземноморские порты из мамлюкского Египта.',
+    'У первых карт были другие масти — монеты, кубки, мечи и жезлы. Их до сих пор рисуют в испанской колоде.',
+    '«Черви» — от слова «червонный», то есть ярко-красный: такую краску делали из кошенили — особых червецов.',
+    '«Бубны» назвали так потому, что на первых немецких картах вместо ромба был нарисован бубенчик.',
+    '«Трефы» — от французского trèfle, «клевер».',
+    'Король червей — единственный король без усов: их потеряли при перерисовках и от износа старых печатных досок.',
+    'Короля червей прозвали «королём-самоубийцей»: кажется, будто он вонзает меч себе в голову.',
+    'В 1834 году Пушкин напечатал «Пиковую даму»: «тройка, семёрка, туз». В «108» пиковая дама стоит минус 40 — если ею закрыться.',
+    'Колоду из 36 карт можно перемешать 36! способами — это число из 42 цифр. Скорее всего, такого порядка карт, как у вас сейчас, не было ещё никогда.',
+    'Шанс получить при раздаче сразу четыре дамы — 1 из 58 905.',
+    'Джокер появился в Америке в 1860-х для игры юкер. В колоде на 36 карт его нет — и в «108» он не нужен.',
+    'В Японии в новогоднюю ночь в храмах бьют в колокол 108 раз — по числу человеческих страстей, «бонно».',
+    'В буддийских чётках 108 бусин. Отсюда, по легенде, и число нашей игры.',
+    'От Земли до Солнца — примерно 107 диаметров Солнца. Почти 108!',
+    'Немецкая родственница «108» — Mau-Mau: её правила впервые напечатали в 1958 году.',
+    'В Чехии похожую игру зовут Prší — «дождь».',
+    'UNO — дальний родственник «108»: его придумали в 1971 году.',
+    'Ташкентское метро открыли 6 ноября 1977 года — первым в Центральной Азии.',
+    'До июня 2018 года ташкентское метро нельзя было фотографировать: оно считалось военным объектом и бомбоубежищем.',
+    'Станция «Космонавтлар» в Ташкенте украшена мозаикой и барельефами о космосе — отсюда наша колода «Космос».',
+    'После землетрясения 1966 года Ташкент отстраивали заново — и тогда же взялись за метро.',
+    'Nest One в Ташкент Сити — самое высокое здание Узбекистана: 266,5 метра и 51 этаж.',
+    'Ташкентская телебашня — 375 метров, её открыли в 1985 году. Смотровая площадка — на высоте 100 метров.',
+    'В 2009 году Ташкент отметил 2200-летие.',
+    'Культура и традиции плова внесены в список нематериального наследия ЮНЕСКО в 2016 году.',
+    'Совет: девятка стоит 0 очков — её не страшно оставить на руках.',
+    'Совет: туз стоит 11 очков — избавляйтесь от тузов пораньше.',
+    'Совет: вдвоём туз возвращает ход вам: туз, туз, восьмёрка, дама — и партия ваша.',
+    'Совет: последняя карта — шестёрка? Партия не закончена, пока штраф не возьмёт кто-то другой.',
+  ];
+  const BAIKI = {
+    m01: 'На экзамене я вытянул билет номер семь и на автомате сказал преподавателю: «Берите две». Пересдача была весёлой.',
+    m02: 'Клиент попросил стрижку «как у пикового короля». Я полчаса выбривал ему корону. Чаевые — 108 тысяч. Совпадение?',
+    m03: 'Однажды я так хлопнул картой по столу, что подпрыгнули все пиалы в чайхане. С тех пор Ильхом-ака наливает мне чай в железную кружку.',
+    m04: 'Я написал бота, который играет в 108 идеально. Он проиграл бабушке Холиде за три партии. Баг я так и не нашёл — думаю, это тапок.',
+    m05: 'Меня пустили играть со взрослыми, когда я в девять лет закрыл партию дамой. Дядя Бахтиёр до сих пор уверен, что я подглядывал.',
+    m06: 'Правило про 107 придумал я! Ну, так говорят во дворе. Ну, так во дворе говорю я.',
+    m07: 'Карта, которую ты не сыграл, — тоже ход. Так я объясняю гостям, почему сижу с девятью картами.',
+    m08: 'В моей чайхане закон: кто набрал 108 — разливает чай всему столу. Я хозяин, поэтому разливаю всегда. Только никому не говорите, что мне это нравится.',
+    m09: 'Вёз пассажира от Чорсу до Ташкент Сити — он всю дорогу объяснял мне правила 108. Приехали, я говорю: «С вас 108 тысяч. Ровно 107 — бесплатно».',
+    m10: 'Мой первый трек назывался «Пиковая дама». Двенадцать прослушиваний, девять — мама. Зато в чайхане его включают каждый раз, когда кто-то закрывается на минус сорок.',
+    m11: 'Я посчитал: если бы мне платили доллар за каждую взятую семёрку, я бы уже купил этаж в Ташкент Сити. Но платят почему-то только штрафом.',
+    m12: 'Настоящий плов — как партия в 108: главное не торопиться и вовремя закрыть казан. Ну или пиковую даму.',
+    m13: 'Двадцать лет в кураше — и ни одной слезы на ковре. А когда мне вернули пять карт за короля червей — плакал. Это другое.',
+    m14: 'В молодости я гонял отару по степи, и монгольские чабаны научили меня считать очки бусинами чёток. Сто восемь бусин — сто восемь очков. Правда или нет — решай сам, внучок.',
+    m15: 'В восемьдесят седьмом в поезде Ташкент — Москва я выиграл шапку, патефон и дирижёра оркестра. Дирижёра пришлось вернуть — он слишком громко считал очки.',
+    f01: 'Я веду таблицу всех своих партий с пятого класса. Пиковая дама приходит ко мне подозрительно часто. Я написала об этом курсовую.',
+    f02: 'Меня выгнали из библиотеки за смех. Я читала «Пиковую даму» и представила, как Германн берёт пять за короля червей.',
+    f03: 'Квартальный отчёт у меня сходится до тийина. Очки в 108 — тоже до тийина. Поэтому со мной никто не спорит. И играть тоже не хотят.',
+    f04: 'На тренировках мы играем в 108 в перерывах: кто проиграл — делает 108 подач. Я ни разу не подавала. Ну, почти.',
+    f05: 'Я всегда молчу за игрой. Однажды сказала одно слово — «пики», — и трое мужчин взяли по десять карт. С тех пор меня боятся, когда я молчу.',
+    f06: 'Тридцать лет назад я пришла в чайхану за мужем и сказала: «Я только посмотрю». Муж давно спит дома. А я всё смотрю. И выигрываю.',
+    f07: 'Мой тапок проиграл только один раз — дяде Вали. Потом оказалось, что у него в рукаве был второй тапок.',
+    f08: 'Ролик, где Алишер-полвон плачет из-за короля червей, набрал миллион просмотров. Алишер не знает. Не говорите ему.',
+    f09: 'На свадьбе я заказала бубны, и тамада объявил: «Танцуют все бубны!» Полчаса никто не понимал, кто танцует. Я выиграла.',
+    f10: 'Я прошла все игры, где есть босс. В 108 босс — бабушка Холида. Её я так и не прошла.',
+  };
+  function storyFor() {
+    if (!SP || !G) return null;
+    const pool = G.players.filter(p => p.id !== me && typeof avatarSeeds[p.id] === 'string' && BAIKI[avatarSeeds[p.id]]);
+    if (!pool.length) return null;
+    const p = pool[(G.round + Math.abs(G.skinSeed || 0)) % pool.length];
+    return { pid: p.id, hero: avatarSeeds[p.id], name: p.name, text: BAIKI[avatarSeeds[p.id]] };
+  }
+  function roundTipHTML() {
+    const st = G.round % 2 === 0 ? storyFor() : null;
+    if (st) {
+      if (!prof.stories[st.hero]) { prof.stories[st.hero] = 1; saveProf(); if (Object.keys(prof.stories).length >= 10) unlock('stories'); }
+      return `<div class="tip story">${avatar(st.hero, 'smug')}<div><b>Байка от ${esc(st.name)}</b> ${esc(st.text)}</div></div>`;
+    }
+    const f = FACTS[(G.round * 7 + Math.abs(G.skinSeed || 0)) % FACTS.length];
+    return `<div class="tip"><b>${f.startsWith('Совет:') ? 'Совет' : 'А вы знали?'}</b> ${esc(f.replace(/^Совет: /, ''))}</div>`;
+  }
+
+  // ---------- «потыкать» героя ----------
+  const POKE = ['Эй, не трогай!', 'Щекотно!', 'Я думаю!', 'Руки!', 'Что надо?', 'Ай!', 'Не мешай!', 'Хи-хи!'];
+  let pokeAt = 0;
+  function poke(pid) {
+    if (!G || pid === me || Date.now() - pokeAt < 700) return;
+    pokeAt = Date.now();
+    const moods_ = ['annoyed', 'shocked', 'laugh', 'pout', 'angry', 'smug'];
+    setMood(pid, moods_[Math.floor(Math.random() * moods_.length)], 2200, POKE[Math.floor(Math.random() * POKE.length)]);
+    prof.pokes = (prof.pokes || 0) + 1; saveProf(); if (prof.pokes >= 10) unlock('poke');
+  }
+
+  // ---------- партия дня ----------
+  function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+  const dayLabel = k => k.split('-').reverse().join('.');
+  function seedOf(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 1) | 0; }
+  function seededRand(seed) { let s = seed | 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  // ---------- поделиться результатом: картинка + текст с эмодзи ----------
+  const SHARE_URL = 'https://game-108.onrender.com';
+  function roundsEmoji() {
+    return G.history.map(h => {
+      const r = h.results.find(x => x.idx === me);
+      if (!r || r.out) return '';
+      if (h.finisher === me) return r.pts < 0 ? '👑' : '🟩';
+      if (r.reset) return '🔄';
+      if (r.after >= 108) return '💀';
+      return r.pts <= 0 ? '🟩' : r.pts < 15 ? '🟨' : r.pts < 30 ? '🟧' : '🟥';
+    }).join('');
+  }
+  function iWon() { return G.mode === 'elim' ? G.winner === me : !G.losers.includes(me); }
+  function shareText() {
+    const head = G.daily ? `108 · Партия дня ${dayLabel(G.daily)}` : `108 · ${G.mode === 'elim' ? 'На выбывание' : 'Классика'}`;
+    const hero = SP && typeof avatarSeeds[me] === 'string' ? SP.LABEL[avatarSeeds[me]] : '';
+    const won = iWon(), sc = G.players[me].score;
+    return [head, `${hero ? hero + ' · ' : ''}партий: ${G.round}`, roundsEmoji() + (won ? '🏆' : '😭'),
+      won ? `Итог: ${ptsW(sc)} — победа!` : `Итог: ${ptsW(sc)} — проиграл`, `Звание: ${rankOf(prof.xp).name}`, `Сыграй: ${SHARE_URL}`].join('\n');
+  }
+  const loadImg = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
+  async function resultImage() {
+    const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const x = cv.getContext('2d');
+    const sc = SCENES.find(s => s[0] === sceneNow) || SCENES[0];
+    try { const bg = await loadImg(sc[2]); const k = Math.max(W / bg.width, H / bg.height); x.drawImage(bg, (W - bg.width * k) / 2, (H - bg.height * k) / 2, bg.width * k, bg.height * k); }
+    catch (e) { x.fillStyle = '#0f4c4c'; x.fillRect(0, 0, W, H); }
+    const gr = x.createLinearGradient(0, 0, 0, H);
+    gr.addColorStop(0, 'rgba(20,18,40,.6)'); gr.addColorStop(.45, 'rgba(20,18,40,.2)'); gr.addColorStop(.7, 'rgba(20,18,40,.75)'); gr.addColorStop(1, 'rgba(20,18,40,.92)');
+    x.fillStyle = gr; x.fillRect(0, 0, W, H);
+    const FD = getComputedStyle(document.documentElement).getPropertyValue('--font-display') || 'sans-serif';
+    x.textAlign = 'center'; x.lineJoin = 'round';
+    const txt = (t, y, size, fill, stroke) => { x.font = `900 ${size}px ${FD}`; if (stroke !== false) { x.lineWidth = Math.max(6, size / 7); x.strokeStyle = '#1d1a2e'; x.strokeText(t, W / 2, y); } x.fillStyle = fill; x.fillText(t, W / 2, y); };
+    txt('108', 200, 190, '#ffc93c');
+    txt(G.daily ? `Партия дня · ${dayLabel(G.daily)}` : (G.mode === 'elim' ? 'На выбывание' : 'Карточная игра'), 270, 44, '#ffffff');
+    const won = iWon();
+    const id = SP && typeof avatarSeeds[me] === 'string' ? avatarSeeds[me] : null;
+    if (id && SP.META && SP.META[id]) {
+      try {
+        const im = await loadImg(`sprites/${id}.webp`), m = SP.META[id], cell = won ? 1 : 2;
+        const dh = 520, dw = m.w * dh / m.h;
+        x.drawImage(im, cell * m.w, 0, m.w, m.h, (W - dw) / 2, 320, dw, dh);
+      } catch (e) {}
+    }
+    txt(won ? 'ПОБЕДА!' : 'Я НАБРАЛ 108', 960, 96, won ? '#8de3a5' : '#ff6b6b');
+    txt(`${SP && id ? SP.LABEL[id] + ' · ' : ''}${ptsW(G.players[me].score)} · партий: ${G.round}`, 1030, 42, '#ffffff');
+    x.font = `64px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    const row = roundsEmoji() + (won ? '🏆' : '😭');
+    x.fillText(row.length > 30 ? [...row].slice(-14).join('') : row, W / 2, 1140);
+    txt(`Звание: ${rankOf(prof.xp).name}`, 1215, 40, '#ffc93c');
+    txt(SHARE_URL.replace('https://', ''), 1300, 36, '#ffffff', false);
+    return new Promise(res => cv.toBlob(res, 'image/png'));
+  }
+  async function shareResult(btn) {
+    if (btn) btn.disabled = true;
+    const text = shareText();
+    let file = null;
+    try { const blob = await resultImage(); if (blob) file = new File([blob], '108-result.png', { type: 'image/png' }); } catch (e) {}
+    try {
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+      if (navigator.share) { await navigator.share({ text }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    finally { if (btn) btn.disabled = false; }
+    try { await navigator.clipboard.writeText(text); } catch (e) {}
+    if (file) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = '108-result.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
+    toast('📋', 'Готово!', file ? 'Картинка сохранена, текст скопирован — вставьте в чат' : 'Текст скопирован — вставьте в чат', 'ok');
+  }
+
+  // ---------- окна: профиль и альбом ----------
+  function showProfileModal(back) {
+    const rk = rankOf(prof.xp);
+    const pct = rk.to ? Math.round((prof.xp - rk.from) / (rk.to - rk.from) * 100) : 100;
+    const got = ACH.filter(a => prof.ach[a[0]]).length;
+    const stat = (n, l) => `<div class="stat"><b>${n}</b><small>${l}</small></div>`;
+    const bg = modal(`<h2>Профиль</h2>
+      <div class="rankbox"><div class="rk-ico">🎖</div><div><b>${esc(rk.name)}</b><div class="xpbar"><i style="width:${pct}%"></i></div>
+        <small>${prof.xp} опыта${rk.to ? ` · до «${esc(rk.next)}» ещё ${rk.to - prof.xp}` : ' · высшее звание'}</small></div></div>
+      <div class="stats">${stat(prof.games, 'игр')}${stat(prof.wins, 'побед')}${stat(prof.rounds, 'партий')}${stat(prof.closes, 'закрыто')}${stat(albumCount(), 'в альбоме')}${stat(Object.keys(prof.stories).length, 'баек')}</div>
+      <h3 class="sub-h">Достижения · ${got} из ${ACH.length}</h3>
+      <div class="achs">${ACH.map(a => `<div class="ach ${prof.ach[a[0]] ? 'on' : ''}" title="${esc(a[3])}"><span>${a[1]}</span><b>${esc(a[2])}</b><small>${esc(a[3])}</small></div>`).join('')}</div>
+      <div class="row"><button class="btn" data-act="album">Альбом</button><button class="btn primary" data-act="close">Закрыть</button></div>`);
+    bg.querySelector('[data-act=album]').onclick = () => showAlbumModal(() => showProfileModal(back));
+    bg.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
+  }
+  function showAlbumModal(back, tab) {
+    tab = tab || 'legend';
+    const ranks = E.RANKS, suits = E.SUITS;
+    const all = tab === 'legend' ? [...LEGEND_IDS] : suits.flatMap(s => ranks.map(r => r + s));
+    const cnt = t => (t === 'legend' ? [...LEGEND_IDS] : suits.flatMap(s => ranks.map(r => r + s))).filter(id => album[id + ':' + t]).length;
+    const tot = t => t === 'legend' ? LEGEND_IDS.size : 36;
+    const cell = id => {
+      const c = { id, rank: id.slice(0, -1), suit: id.slice(-1) };
+      const n = album[id + ':' + tab];
+      return n ? `<div class="acell" title="${esc(E.cardName(c))} ×${n}">${cardHTML(c, '', 'tabindex="-1"', tab)}${n > 1 ? `<i class="acnt">×${n}</i>` : ''}</div>`
+        : `<div class="acell locked" title="Ещё не найдена"><div class="back"></div><i>?</i></div>`;
+    };
+    const bg = modal(`<h2>Альбом карт · ${albumCount()} из ${ALBUM_TOTAL}</h2>
+      <p class="note-s">Редкие версии карт выпадают случайно в каждой партии. Карта попадает в альбом, когда приходит вам в руку или ложится на стол.</p>
+      <div class="seg tabs">${RAR_ORDER.map(t => `<button class="${t === tab ? 'on' : ''}" data-tab="${t}">${RAR_NAME[t]} <small>${cnt(t)}/${tot(t)}</small></button>`).join('')}</div>
+      ${tab === 'legend' ? '<p class="note-s">Легенды — карты с нашими героями. Их всего восемь, и выпадают они очень редко.</p>' : ''}
+      <div class="album ${tab === 'legend' ? 'leg' : ''}">${all.map(cell).join('')}</div>
+      <div class="row"><button class="btn primary" data-act="close">Закрыть</button></div>`);
+    bg.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showAlbumModal(back, b.dataset.tab));
+    bg.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
+  }
+  // =====================================================================================
 
   // ---------- звуки: синтез WebAudio, без файлов ----------
   // ---------- звуки: настоящие записи карт (Kenney, CC0), интерфейсные звуки Kenney и мультяшные стингеры реакций (sfx/*.mp3) ----------
@@ -763,6 +1325,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       const c = G.discard[G.discard.length - 1];
       const isAttack = c.rank === '6' || c.rank === '7' || (c.rank === 'K' && c.suit === 'H');
       SFX.play('play'); if (c.rank === 'Q') SFX.play('queen'); else if (isAttack) SFX.play('penalty');
+      trackPlay(b, c, actor);
+      if (actor !== me || G.current !== me) coach(c.rank === 'K' && c.suit === 'H' ? 'cK' : ({ '6': 'c6', '7': 'c7', A: 'cA', Q: 'cQ', '8': 'c8' })[c.rank]);
       if (isAttack && G.pending) {
         const cnt = G.pending.count || 1;
         if (cnt >= 2) { burst(`ЦЕПОЧКА ×${cnt}`, 'chain', `бери ${G.pending.draws}!`); if (cnt >= 3) shake(1); }
@@ -801,11 +1365,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       if (drew <= 0) return;
       if (b.hands[i] === 0 && b.finisher === i) {                              // вышедшего вернули в игру
         setMood(i, 'devastated', 4500, `Вернули! +${drew}`); popAt(i, `+${drew}`, 'bad'); shake(1); burst('ВЕРНУЛИ!', 'take', `+${drew} — снова в игре`);
+        if (i !== me && E.prevIdx(G, i) === me) unlock('returner');
         G.players.forEach(q => { if (q.id !== i && !q.out) setMood(q.id, 'laugh', 4000); });
         return;
       }
       for (let k = 0; k < Math.min(drew, 6); k++) setTimeout(() => SFX.play('draw', { minGap: 0 }), k * 90);
-      if (b.pending) { popAt(i, `+${drew}`, 'bad'); if (drew >= 4) shake(drew >= 6 ? 2 : 1); }
+      if (b.pending) { popAt(i, `+${drew}`, 'bad'); if (drew >= 4) shake(drew >= 6 ? 2 : 1); if (i === me && drew >= 5) unlock('big_take'); }
       else if (b.mustCover && drew >= 2) popAt(i, `+${drew}`, 'bad');
       if (b.pending) {                                // штраф
         const mood = drew <= 1 ? 'pout' : drew <= 3 ? 'sad' : drew <= 5 ? 'cry' : 'devastated';
@@ -836,6 +1401,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   }
   function reactToRoundEnd() {
     const r = G.lastRound;
+    trackRoundEnd();
+    setTimeout(() => coach('round'), 1800);
     const mine = r.results.find(x => x.idx === me);
     if (G.phase === 'gameOver') SFX.play(G.losers.includes(me) ? 'lose' : 'win');
     else if (mine && mine.reset) SFX.play('reset');
@@ -879,10 +1446,13 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   const ACTIVE = new Set(['play', 'chooseSuit', 'counterOffer']);
 
   // карта: углы — номинал + значок масти (картинка, запасной — символ), центр — придворный арт (В/Д/К/Т) или крупный значок масти
-  function cardHTML(c, cls, attrs) {
+  function cardHTML(c, cls, attrs, rar) {
     const court = 'JQKA'.includes(c.rank);
+    if (rar === undefined) rar = rarityOf(c);
+    const leg = rar === 'legend' && LEGEND_IDS.has(c.id) ? `<span class="legend-art" style="background-image:url('art/legend_${c.id}.webp')"></span>` : '';
+    if (rar) cls = (cls || '') + ' rar-' + rar;
     const sym = `<i class="ci ci-${c.suit}"><b>${E.SUIT_SYM[c.suit]}</b></i>`;
-    return `<button type="button" class="card ${isRed(c) ? 'red' : ''} ${c.rank === 'Q' ? 'q' : ''} ${court ? 'court' : 'pip'} r${c.rank} ${cls || ''}" ${attrs || ''} aria-label="${E.cardName(c)}">
+    return `<button type="button" class="card ${isRed(c) ? 'red' : ''} ${c.rank === 'Q' ? 'q' : ''} ${court ? 'court' : 'pip'} r${c.rank} ${cls || ''}" ${attrs || ''} aria-label="${E.cardName(c)}${rar ? ' · ' + RAR_NAME[rar].toLowerCase() : ''}">${leg}
       <span class="corner">${E.RANK_RU[c.rank]}<span class="s">${sym}</span></span>
       <span class="center">${court ? `<i class="art art-${c.rank}${c.suit}"><b>${E.SUIT_SYM[c.suit]}</b></i>` : sym}</span>
       <span class="corner b">${E.RANK_RU[c.rank]}<span class="s">${sym}</span></span>
@@ -912,6 +1482,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   function sendEmo(mood) {
     if (!G || Date.now() < emoCoolUntil) return;
     emoCoolUntil = Date.now() + 1500;
+    prof.emotes = (prof.emotes || 0) + 1; saveProf(); if (prof.emotes >= 15) unlock('social');
     const e = EMOS.find(x => x[0] === mood);
     setMood(me, mood, 2600, e ? e[2] : undefined);
     setTimeout(() => render(), 1550);
@@ -925,6 +1496,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   }
   function render() {
     if (!G) return;
+    if (G.skinSeed == null) G.skinSeed = (Math.random() * 2 ** 31) | 0;
+    applyDeck();
     const lm = E.legalMoves(G);
     const myTurn = G.current === me && ACTIVE.has(G.phase);
     $('roundChip').textContent = `партия ${G.round}`;
@@ -987,6 +1560,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       `data-id="${c.id}" ${legal.has(c.id) ? '' : 'tabindex="-1"'}`)).join('');
     $('hand').style.visibility = dealing ? 'hidden' : '';
     lastHandIds = new Set(p.hand.map(c => c.id));
+    trackRares();
+    if (!dealing && ACTIVE.has(G.phase)) {
+      if (myTurn && G.phase === 'play') coach(G.pending ? 'penalty_me' : 'turn');
+      if (G.finisher != null && G.finisher !== me) coach('finisher');
+      if (p.score >= 90 && !p.out) coach('danger');
+    }
 
     // действия
     let a = '';
@@ -1147,7 +1726,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const bg = modal(`<h2>Партия ${G.round} закончена — закрыл ${esc(fin.name)}</h2>
       ${gone.length ? `<p class="net-err">Выбывает из-за стола: ${esc(gone.join(', '))}. За столом остаются ${G.players.filter(p => !p.out).length}.</p>` : ''}
       <table class="score"><thead><tr><th>Игрок</th><th>На руках</th><th>Очки</th><th>Счёт</th></tr></thead><tbody>${scoreRows(G.lastRound.results.filter(x => !x.out || (G.eliminatedNow || []).includes(x.idx)))}</tbody></table>
-      <div class="tip"><b>А вы знали?</b> ${esc(TIPS[(G.round * 7 + G.players.length) % TIPS.length])}</div>
+      ${roundTipHTML()}
       <div class="row"><button class="btn primary" data-act="next">Следующая партия</button></div>`, true);
     if (G.players[me].out && !NET.online) setTimeout(() => { const nb = bg.querySelector('[data-act=next]'); if (nb && document.body.contains(nb)) nb.click(); }, 2600 * SPD());
     bg.dataset.kind = 'round';
@@ -1161,8 +1740,9 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       const bg = modal(`<h2 class="big">${iWon ? 'Вы последний за столом!' : esc(w.name) + ' побеждает!'}</h2>
         <div class="winner">${avatar(avatarSeeds[G.winner], 'party')}<p>${iWon ? 'Все остальные перебрали свои 108. Стол ваш.' : `Последний за столом — ${esc(w.name)}, ${ptsW(w.score)}.`}</p></div>
         <h3 style="margin:4px 0 6px;font-family:var(--font-display)">Порядок выбывания</h3><ol class="elim-list">${order}</ol>
-        <div class="row"><button class="btn" data-act="hist">История партий</button><button class="btn primary" data-act="new">Новая игра</button></div>`, true);
+        <div class="row"><button class="btn" data-act="hist">История партий</button><button class="btn share-btn" data-act="share">📤 Поделиться</button><button class="btn primary" data-act="new">Новая игра</button></div>`, true);
       bg.dataset.kind = 'over';
+      bg.querySelector('[data-act=share]').onclick = e => shareResult(e.currentTarget);
       bg.querySelector('[data-act=new]').onclick = () => { if (NET.online) { NET.send({ t: 'newGame' }); closeModal(); } else showStart(); };
       bg.querySelector('[data-act=hist]').onclick = showScoreModal;
       return;
@@ -1173,8 +1753,10 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const bg = modal(`<h2 class="big">${iLost ? 'Вы набрали 108' : 'Победа!'}</h2>
       <p>${iLost ? (many ? `Проиграли ${esc(losers)} — все, кто набрал 108 и больше.` : 'Игра проиграна — кто первым набирает 108, тот и проиграл.') : `${many ? 'Проиграли' : 'Проиграл'} ${esc(losers)} — ${many ? 'набрали' : 'набрал'} 108 и больше.`}</p>
       <table class="score"><thead><tr><th>Игрок</th><th>На руках</th><th>Очки</th><th>Итог</th></tr></thead><tbody>${scoreRows(G.lastRound.results)}</tbody></table>
-      <div class="row"><button class="btn" data-act="hist">История партий</button><button class="btn primary" data-act="new">Новая игра</button></div>`, true);
+      ${G.daily ? `<p class="note-s">Партия дня ${dayLabel(G.daily)}: первая раздача сегодня одна для всех — сравните результат с друзьями.</p>` : ''}
+      <div class="row"><button class="btn" data-act="hist">История партий</button><button class="btn share-btn" data-act="share">📤 Поделиться</button><button class="btn primary" data-act="new">Новая игра</button></div>`, true);
     bg.dataset.kind = 'over';
+    bg.querySelector('[data-act=share]').onclick = e => shareResult(e.currentTarget);
     bg.querySelector('[data-act=new]').onclick = () => { if (NET.online) { NET.send({ t: 'newGame' }); closeModal(); } else showStart(); };
     bg.querySelector('[data-act=hist]').onclick = showScoreModal;
   }
@@ -1196,24 +1778,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       <div class="row"><button class="btn primary" data-act="close">Закрыть</button></div>`);
     document.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
   }
-  const TIPS = [
-    'Девятка стоит 0 очков — её не страшно оставить на руках.',
-    'Туз стоит 11 очков: избавляйтесь от тузов пораньше.',
-    'Закрыть партию пиковой дамой — минус 40 очков.',
-    'Вдвоём туз возвращает ход вам: туз, туз, восьмёрка, дама — и партия ваша.',
-    'Последняя карта — шестёрка? Партия не закончена, пока штраф не возьмёт кто-то другой.',
-    'Ровно 107 обнуляет счёт. Одна бусина до конца — и всё сначала.',
-    'Немецкая родственница «108» — Mau-Mau: её правила впервые напечатали в 1958 году.',
-    'В Чехии похожую игру зовут Prší — «дождь».',
-    'UNO — дальний родственник «108»: его придумали в 1971 году.',
-    'В 108 бусин собраны буддийские чётки — отсюда, по легенде, и число игры.',
-    'Турсун-бобо утверждает, что играл в 108 в монгольской юрте. Мы не спорим.',
-    'Король червей отбивается только девяткой червей — берегите её.',
-    'Восьмёрку надо покрыть сразу: мастью, дамой или другой восьмёркой.',
-  ];
-  function showLoreModal(back) {
-    modal(`<h2>История «108»</h2><div class="lore">
-      <div class="tree"><span>Crazy Eights</span>→<span>Mau-Mau</span>→<span>Чешский дурак · Фараон · 101</span>→<span class="me">108</span></div>
+  function showLoreModal(back, tab) {
+    tab = tab || 'hist';
+    unlock('historian');
+    const TABS = [['hist', 'История'], ['facts', 'Факты'], ['baiki', 'Байки']];
+    let body = '';
+    if (tab === 'hist') body = `<div class="tree"><span>Crazy Eights</span>→<span>Mau-Mau</span>→<span>Чешский дурак · Фараон · 101</span>→<span class="me">108</span></div>
       <h3>Семья «сбрасывалок»</h3>
       <p>«108» — из большой семьи игр, где побеждает тот, кто первым избавится от карт. Её родственники — американские Crazy Eights («сумасшедшие восьмёрки»), немецкая Mau-Mau и фирменная UNO, придуманная в 1971 году.</p>
       <h3>Из Германии — во двор</h3>
@@ -1223,8 +1793,19 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       <p>Точной истории никто не записал. Одна из немногих находок — пост 2011 года в ЖЖ: автору показали «монгольскую игру 108», где набравший больше 108 выбывает, а остальные играют дальше. Отсюда наш режим «На выбывание».</p>
       <div class="legend"><b>Легенда стола.</b> В Монголии, Тибете и Индии 108 — священное число: столько бусин в буддийских чётках. Говорят, в степи считали очки бусинами — кто «перебрал чётки», тот выходил из круга. А ровно 107 — бусина до конца, и всё начинается заново.</div>
       <p class="src" style="margin-top:12px">Источники: Википедия (Mau-Mau, 101), правила «101» на dic.academic.ru, запись «Карточная игра 108» в ЖЖ (2011). Легенда — наша, для настроения.</p>
-      </div><div class="row"><button class="btn primary" data-act="close">Понятно</button></div>`);
-    document.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
+      `;
+    else if (tab === 'facts') body = `<ol class="facts">${FACTS.map(f => `<li>${esc(f)}</li>`).join('')}</ol>
+      <p class="src">Источники: World of Playing Cards (wopc.co.uk), Википедия (Mau-Mau, King of hearts, Joya no Kane, Nest One), Skyeng (названия мастей), Kursiv (метро Ташкента), Радио Свобода (запрет фото в метро), OrexCA (телебашня).</p>`;
+    else {
+      const heard = Object.keys(prof.stories).length;
+      body = `<p class="note-s">Байки герои рассказывают между партиями. Услышано: ${heard} из ${Object.keys(BAIKI).length}. Это выдумки — для настроения.</p><div class="baiki">${(SP ? SP.CHARS : []).map(id => prof.stories[id]
+        ? `<div class="baika">${avatar(id, 'laugh')}<div><b>${esc(SP.LABEL[id])}</b><p>${esc(BAIKI[id])}</p></div></div>`
+        : `<div class="baika locked">${avatar(id, 'neutral')}<div><b>${esc(SP.LABEL[id])}</b><p>Сыграйте за одним столом — и услышите его байку.</p></div></div>`).join('')}</div>`;
+    }
+    const bg = modal(`<h2>«108»: история, факты, байки</h2><div class="seg tabs">${TABS.map(([k, t]) => `<button class="${k === tab ? 'on' : ''}" data-tab="${k}">${t}</button>`).join('')}</div>
+      <div class="lore">${body}</div><div class="row"><button class="btn primary" data-act="close">Понятно</button></div>`);
+    bg.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showLoreModal(back, b.dataset.tab));
+    bg.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
   }
   function showRulesModal(back) {
     modal(`<h2>Правила «108»</h2><div class="rules">
@@ -1261,7 +1842,14 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const PREVIEW = ['party', 'evil', 'cry', 'sly', 'shocked', 'angry', 'laugh', 'think', 'worried', 'smug', 'devastated', 'relief', 'excited'];
     const segs = (id, list, cur) => `<div class="seg" id="${id}">${list.map(([k, t]) => `<button class="${k === cur ? 'on' : ''}" data-v="${k}">${t}</button>`).join('')}</div>`;
     const info = c => c && SP ? `<b>${esc(SP.LABEL[c])}.</b> ${esc(SP.BIO[c] || '')}` : 'Не выбран — герой будет случайным.';
+    const rk = rankOf(prof.xp), dk = todayKey(), dd = prof.daily[dk];
     const bg = modal(`<h2 class="big">108</h2>
+      <div class="quick">
+        <button class="qbtn daily ${dd ? 'done' : ''}" data-act="daily"><span class="qi">🗓</span><b>Партия дня</b><small>${dd ? `сыграна: ${dd.won ? 'победа' : 'проигрыш'}, ${dd.score}` : 'одна раздача для всех'}</small></button>
+        <button class="qbtn" data-act="profile"><span class="qi">🎖</span><b>${esc(rk.name)}</b><small>${prof.xp} опыта · ${ACH.filter(a => prof.ach[a[0]]).length}/${ACH.length}</small></button>
+        <button class="qbtn" data-act="album"><span class="qi">🃏</span><b>Альбом</b><small>${albumCount()} из ${ALBUM_TOTAL} карт</small></button>
+      </div>
+      ${prof.games === 0 && prof.rounds === 0 ? '<p class="first-note">Впервые за столом? Аксакал Турсун-бобо будет подсказывать правила прямо по ходу игры.</p>' : ''}
       ${useSprites()
         ? `<div class="field"><label>Ваш герой</label><div class="start-ava pick" id="pick">${SP.CHARS.map((c, i) => `<button class="pick-btn ${c === myChar ? 'on' : ''}" data-char="${c}" title="${SP.LABEL[c]}">${avatar(c, PREVIEW[i % PREVIEW.length])}</button>`).join('')}</div><div class="pick-info" id="pickInfo">${info(myChar)}</div></div>`
         : `<div class="start-ava">${[['party',0],['evil',1],['cry',2],['sly',3],['shocked',4],['angry',5]].map(([m,i]) => avatar(i, m)).join('')}</div>`}
@@ -1272,6 +1860,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
         <div class="field"><label>Сила ботов</label>${segs('lvl', LEVELS, settings.level)}</div>
         <div class="field"><label>Режим</label>${segs('mode', MODES, settings.mode)}<div class="hint2" id="modeHint">${MODES.find(m => m[0] === settings.mode)[2]}</div></div>
         <div class="field"><label>Темп</label>${segs('spd', SPEEDS, settings.speed)}</div>
+        <div class="field"><label>Подсказки аксакала</label>${segs('coachSeg', [['on', 'Включены'], ['off', 'Выключены']], settings.coach ? 'on' : 'off')}</div>
+        <div class="field"><label>Колода</label><div class="decks" id="decks"><button class="deck-btn rnd ${settings.deck === 'random' ? 'on' : ''}" data-deck="random"><span>Случайно</span></button>${DECKS.map(([k, t, img]) => `<button class="deck-btn ${settings.deck === k ? 'on' : ''}" data-deck="${k}" style="background-image:url('${img}')"><span>${t}</span></button>`).join('')}</div></div>
       </div>
       <div class="field"><label>Место</label><div class="scenes" id="scenes"><button class="scene-btn rnd ${settings.bg === 'random' ? 'on' : ''}" data-bg="random"><span>Случайно</span></button>${SCENES.map(([k, t, , th]) => `<button class="scene-btn ${settings.bg === k ? 'on' : ''}" data-bg="${k}" style="background-image:url('${th}')"><span>${t}</span></button>`).join('')}</div></div>
       <div class="row"><button class="btn" data-act="rules">Правила</button>${NET.available ? '<button class="btn" data-act="online">🌐 С друзьями</button>' : ''}<button class="btn primary" data-act="start">Сдать карты</button></div>`);
@@ -1281,6 +1871,11 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     segOn('lvl', v => { settings.level = v; saveSettings(); });
     segOn('mode', v => { settings.mode = v; saveSettings(); bg.querySelector('#modeHint').textContent = MODES.find(m => m[0] === v)[2]; });
     segOn('spd', v => { settings.speed = v; saveSettings(); });
+    segOn('coachSeg', v => { settings.coach = v === 'on'; if (settings.coach) prof.coach = {}; saveProf(); saveSettings(); });
+    bg.querySelectorAll('#decks .deck-btn').forEach(b => b.onclick = () => { bg.querySelectorAll('#decks .deck-btn').forEach(x => x.classList.toggle('on', x === b)); settings.deck = b.dataset.deck; saveSettings(); });
+    bg.querySelector('[data-act=daily]').onclick = () => { myName = bg.querySelector('#nameInput').value.trim() || 'Вы'; try { localStorage.setItem('g108name', myName); } catch (e) {} newGame(4, { daily: true }); };
+    bg.querySelector('[data-act=profile]').onclick = () => showProfileModal(showStart);
+    bg.querySelector('[data-act=album]').onclick = () => showAlbumModal(showStart);
     bg.querySelectorAll('#scenes .scene-btn').forEach(b => b.onclick = () => { bg.querySelectorAll('#scenes .scene-btn').forEach(x => x.classList.toggle('on', x === b)); settings.bg = b.dataset.bg; saveSettings(); applyScene(true); });
     bg.querySelector('[data-act=rules]').onclick = () => showRulesModal(showStart);
     bg.querySelector('[data-act=lore]').onclick = e => { e.preventDefault(); showLoreModal(showStart); };
@@ -1340,7 +1935,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const prev = G, b = prev ? snap() : null;
     G = m.G; me = m.me; avatarSeeds = m.seeds; lastActionAt = Date.now();
     if (SP) SP.preload(avatarSeeds, () => render()); SFX.preload();
-    if (!prev) applyScene(true);
+    if (!prev) { applyScene(true); deckNow = null; applyDeck(); trackGameStart(); }
     if (!prev || !b || G.round !== b.round) { Object.keys(moods).forEach(k => delete moods[k]); closeModal(); lastHandIds = new Set(); SFX.play('shuffle'); animateDeal(); return; }
     closeModal(); render(); reactToDiff(b); animateDiff(b);
   }
@@ -1384,24 +1979,32 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   }
 
   // ---------- игра ----------
-  function newGame(n) {
+  function newGame(n, opts) {
+    opts = opts || {};
     Object.keys(moods).forEach(k => delete moods[k]);
-    const names = BOT_NAMES.slice().sort(() => Math.random() - .5);
+    const daily = opts.daily ? todayKey() : null;
+    const dseed = daily ? seedOf('108-daily-' + daily) : null;
+    const rnd = daily ? seededRand(dseed) : Math.random;
+    const names = BOT_NAMES.slice().sort(() => rnd() - .5);
     const players = [{ name: myName, isBot: false }];
     const sprites = useSprites();
     let seeds = [];
     if (sprites) {
       // герой игрока — выбранный или случайный; боты — остальные герои под своими именами, парни и девушки вперемешку
       const mine = myChar && SP.CHARS.includes(myChar) ? myChar : SP.CHARS[Math.floor(Math.random() * SP.CHARS.length)];
-      const rest = SP.CHARS.filter(c => c !== mine).sort(() => Math.random() - .5);
+      const rest = SP.CHARS.filter(c => c !== mine).map(c => [c, rnd()]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
       seeds = [mine, ...rest.slice(0, n - 1)];
-      for (let i = 1; i < n; i++) players.push({ name: CHAR_NAMES[seeds[i]] || names[i - 1][0], isBot: true, strategy: settings.level });
+      for (let i = 1; i < n; i++) players.push({ name: CHAR_NAMES[seeds[i]] || names[i - 1][0], isBot: true, strategy: daily ? 'pro' : settings.level });
     } else {
       for (let i = 1; i < n; i++) players.push({ name: names[i - 1][0], isBot: true, strategy: settings.level });
     }
-    G = E.createGame({ players, mode: settings.mode });
+    G = daily ? E.createGame({ players, mode: 'classic', seed: dseed, skinSeed: dseed }) : E.createGame({ players, mode: settings.mode });
+    if (daily) G.daily = daily;
     me = 0;
-    applyScene(true);
+    applyScene(true, daily ? SCENES[Math.abs(dseed) % SCENES.length][0] : null);
+    deckNow = null; applyDeck(); trackGameStart();
+    if (daily) setTimeout(() => toast('🗓', `Партия дня · ${dayLabel(daily)}`, 'Первая раздача сегодня у всех одна — сравните результат с друзьями', 'ach'), 600);
+    setTimeout(() => coach('welcome'), 900);
     if (sprites) {
       avatarSeeds = seeds;
       SP.preload(avatarSeeds, () => render());
@@ -1436,9 +2039,17 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
 
   // ---------- события ----------
   $('hand').addEventListener('click', e => {
-    const b = e.target.closest('.card.legal'); if (!b) return;
+    const b = e.target.closest('.card.legal');
+    if (!b) {
+      const d = e.target.closest('.card');
+      if (d && G && G.current === me && G.phase === 'play') { d.classList.remove('nope'); void d.offsetWidth; d.classList.add('nope'); SFX.play('boing'); explainIllegal(d.dataset.id); }
+      return;
+    }
     doAct('play', b.dataset.id);
   });
+  $('seats').addEventListener('click', e => { const s_ = e.target.closest('.seat'); if (s_ && e.target.closest('.ava-wrap')) poke(+s_.dataset.pid); });
+  $('btnProfile').onclick = () => showProfileModal();
+  $('btnAlbum').onclick = () => showAlbumModal();
   $('actions').addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const act_ = b.dataset.act;
