@@ -2057,6 +2057,13 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     } catch (e) { if (e && e.name === 'AbortError') return; }
     finally { if (btn) btn.disabled = false; }
     try { await navigator.clipboard.writeText(text); } catch (e) {}
+    // внутри claude.ai картинку отдаёт платформа (возможность downloads); на сайте — обычная ссылка
+    const dlc = file && window.claude && typeof window.claude.use === 'function' ? await window.claude.use('downloads').catch(() => null) : null;
+    if (dlc) {
+      try { await dlc.save({ filename: '108-result.png', data: file }); toast('📋', 'Готово!', 'Картинка сохранена, текст скопирован — вставьте в чат', 'ok'); }
+      catch (e) { if (!e || e.code !== 'declined') toast('📋', 'Текст скопирован', 'Картинку здесь сохранить не вышло — вставьте текст в чат', 'ok'); }
+      return;
+    }
     if (file) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = '108-result.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
     toast('📋', 'Готово!', file ? 'Картинка сохранена, текст скопирован — вставьте в чат' : 'Текст скопирован — вставьте в чат', 'ok');
   }
