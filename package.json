@@ -1,0 +1,17 @@
+{
+  "name": "game-108",
+  "version": "1.0.0",
+  "description": "Карточная игра «108»: боты в браузере и онлайн с друзьями по ссылке",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "python3 build.py",
+    "test": "node test.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

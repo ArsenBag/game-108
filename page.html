@@ -1,0 +1,1200 @@
+<title>Карточная игра 108</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@700;900&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Макет: один экран. Сверху соперники с нарисованными аватарами, в центре овальный стол
+   с колодой и битой, снизу — вы и ваша рука. Мультяшный стиль: толстые чернильные контуры,
+   жёсткие смещённые тени без размытия, пухлые кнопки, карты летают между местами.
+   Единственная тема (намеренно): ночной тёмно-бирюзовый фон и тёплые карты. */
+:root {
+  --bg: #1f3d4a;            /* ночной фон вокруг стола */
+  --bg-dot: #2a5060;        /* горошек на фоне */
+  --felt: #2fa38a;          /* сукно стола */
+  --felt-dark: #238a74;
+  --rim: #d98c3f;           /* деревянный борт */
+  --rim-dark: #a86324;
+  --ink: #1d1a2e;           /* контуры и тени */
+  --card: #fff8e8;          /* карта */
+  --card-shade: #efe2c3;
+  --back: #d9534f;          /* рубашка */
+  --back-2: #f07b6a;
+  --black-suit: #1d1a2e;
+  --red-suit: #e03c3c;
+  --fg: #fff6e4;            /* текст */
+  --muted: #b7d6d0;
+  --sun: #ffc93c;           /* акцент: можно сыграть, ваш ход */
+  --sun-dark: #e0a81a;
+  --mint: #8de3a5;          /* очки в минус (хорошо) */
+  --berry: #ff6b6b;         /* штраф, очки в плюс */
+  --panel: #fff8e8;
+  --panel-fg: #1d1a2e;
+  --font-display: "Rubik", "Arial Black", Impact, sans-serif;
+  --font-body: "Nunito", "Segoe UI", Roboto, system-ui, sans-serif;
+  --outline: 3px solid var(--ink);
+  --bounce: cubic-bezier(.34, 1.56, .64, 1);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body);
+  font-size: 15px; font-weight: 600; line-height: 1.35; overflow: hidden;
+  background-image: radial-gradient(var(--bg-dot) 2px, transparent 2.5px);
+  background-size: 26px 26px;
+}
+/* фон-сцена (чайхана ночью) поверх горошка; затемнение к центру, чтобы стол и карты читались */
+body.scene {
+  background-image: linear-gradient(rgba(16,40,50,.35), rgba(16,40,50,.55) 35%, rgba(16,40,50,.35)), url("art/bg.webp");
+  background-size: cover, cover; background-position: center, center bottom; background-attachment: fixed, fixed;
+}
+button { font-family: inherit; font-size: inherit; cursor: pointer; }
+button:focus-visible, .card:focus-visible, .deck:focus-visible { outline: 4px solid var(--sun); outline-offset: 3px; }
+.app {
+  height: 100%; display: flex; flex-direction: column; gap: 6px; box-sizing: border-box;
+  padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 1080px; margin-inline: auto;
+}
+
+/* ---- шапка ---- */
+.top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.logo {
+  font-family: var(--font-display); font-weight: 900; font-size: 34px; line-height: 1; color: var(--sun);
+  -webkit-text-stroke: 1.5px var(--ink); text-shadow: 3px 3px 0 var(--ink); letter-spacing: -.02em; transform: rotate(-4deg);
+}
+.round-chip { font-weight: 800; color: var(--muted); }
+.top .spacer { flex: 1; }
+.btn {
+  border: var(--outline); background: var(--card); color: var(--ink); padding: 8px 16px; border-radius: 14px;
+  font-weight: 800; box-shadow: 0 4px 0 var(--ink); transition: transform .08s, box-shadow .08s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 var(--ink); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.btn.primary { background: var(--sun); }
+.btn.quiet { background: var(--felt); color: var(--fg); }
+.btn.small { padding: 6px 12px; font-size: 13px; border-radius: 11px; box-shadow: 0 3px 0 var(--ink); }
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
+
+/* ---- соперники ---- */
+.seats { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.seat { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 100px; padding: 4px 6px 6px; border-radius: 18px; }
+.ava-wrap { line-height: 0; }
+.seat .ava-wrap { width: 100px; height: 112px; }
+.seat .name { font-weight: 800; font-size: 14px; }
+.seat.active .name { color: var(--sun); }
+.seat.active { background: rgba(255,201,60,.16); box-shadow: inset 0 0 0 3px var(--sun), 0 4px 0 rgba(29,26,46,.5); }
+.seat.active .ava-wrap { animation: seat-pulse 1.6s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes seat-pulse { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.me-row.active { background: rgba(255,201,60,.16); box-shadow: inset 0 0 0 3px var(--sun); }
+.last-act { font-size: 12px; color: var(--muted); max-width: 240px; text-wrap: balance; }
+.seat .fan { display: flex; height: 30px; align-items: flex-end; margin-top: 2px; }
+.seat .fan .mini { width: 22px; height: 30px; margin-left: -13px; border-radius: 4px; border-width: 2px; box-shadow: 2px 2px 0 var(--ink); }
+.seat .fan .mini:first-child { margin-left: 0; }
+.seat .meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; font-variant-numeric: tabular-nums; }
+.seat .meta b { color: var(--fg); }
+.bubble {
+  position: absolute; top: -6px; left: 50%; transform: translateX(-50%) scale(0); transform-origin: bottom center;
+  background: var(--card); color: var(--ink); border: var(--outline); border-radius: 12px; padding: 4px 9px; font-size: 12px; font-weight: 800;
+  white-space: nowrap; box-shadow: 2px 2px 0 var(--ink); z-index: 3; pointer-events: none; max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+}
+.bubble.show { animation: bubble 2.6s var(--bounce) forwards; }
+@keyframes bubble { 0% { transform: translateX(-50%) scale(0); } 12% { transform: translateX(-50%) scale(1); } 85% { transform: translateX(-50%) scale(1); opacity: 1; } 100% { transform: translateX(-50%) scale(.6); opacity: 0; } }
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 10px; height: 10px; background: var(--card); border-right: var(--outline); border-bottom: var(--outline); transform: translateX(-50%) rotate(45deg); }
+
+/* ---- стол ---- */
+.arena { flex: 1; min-height: 170px; display: grid; place-items: center; }
+.table {
+  position: relative; width: min(100%, 720px); height: 100%; max-height: 300px; min-height: 160px;
+  border-radius: 999px; background: var(--felt); border: 10px solid var(--rim);
+  box-shadow: inset 0 0 0 4px var(--ink), 0 0 0 4px var(--ink), 0 10px 0 4px var(--rim-dark), 0 14px 0 4px var(--ink);
+  background-image: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.14), transparent 55%);
+  display: flex; align-items: center; justify-content: center; gap: clamp(16px, 5vw, 56px); box-sizing: border-box;
+}
+.scene .table { background-image: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.16), rgba(0,0,0,.18) 80%), url("art/felt.webp"); background-size: auto, 256px 256px; }
+.pile { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.pile .lbl { font-size: 12px; font-weight: 800; color: var(--fg); opacity: .8; font-variant-numeric: tabular-nums; }
+.deck { position: relative; width: 72px; height: 102px; border-radius: 10px; }
+.deck .back { position: absolute; inset: 0; }
+.deck .back:nth-child(2) { transform: translate(3px, -3px); }
+.deck .back:nth-child(3) { transform: translate(6px, -6px); }
+.deck.clickable { cursor: pointer; }
+.deck.clickable .back:last-child { box-shadow: 0 0 0 4px var(--sun), 4px 4px 0 4px var(--ink); animation: wiggle 1.4s ease-in-out infinite; }
+@keyframes wiggle { 0%, 100% { transform: translate(6px, -6px) rotate(0); } 50% { transform: translate(6px, -9px) rotate(-3deg); } }
+.discard-slot { width: 72px; height: 102px; }
+.status { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 130px; max-width: 220px; text-align: center; }
+.chip {
+  padding: 6px 12px; border-radius: 999px; font-weight: 800; font-size: 13px; color: var(--ink);
+  background: var(--card); border: var(--outline); box-shadow: 2px 3px 0 var(--ink); animation: chip-in .35s var(--bounce);
+}
+.chip.danger { background: var(--berry); }
+.chip.gold { background: var(--sun); }
+.chip .suit-big { font-size: 18px; line-height: 1; }
+@keyframes chip-in { from { transform: scale(.5); } }
+.turn-note { font-family: var(--font-display); font-weight: 900; font-size: 20px; color: var(--fg); text-shadow: 2px 2px 0 var(--ink); text-wrap: balance; }
+.turn-note.you { color: var(--sun); animation: shout .5s var(--bounce); }
+@keyframes shout { from { transform: scale(.4) rotate(-8deg); } }
+.turn-note.wait { font-size: 15px; opacity: .85; }
+
+/* ---- карты ---- */
+.card, .back {
+  box-sizing: border-box; width: 72px; height: 102px; border-radius: 10px; position: relative; border: var(--outline);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.card {
+  background: var(--card); color: var(--black-suit); font-family: var(--font-display); font-weight: 900; padding: 0; text-align: left;
+  display: block; user-select: none;
+  background-image: linear-gradient(160deg, transparent 60%, var(--card-shade));
+}
+.card.red { color: var(--red-suit); }
+.card .corner { position: absolute; left: 5px; top: 3px; font-size: 17px; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.card .corner.b { left: auto; right: 5px; top: auto; bottom: 3px; transform: rotate(180deg); }
+.card .corner .s { font-family: var(--font-body); font-size: 13px; line-height: 1; display: block; }
+.card .center { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-body); font-size: 40px; }
+.card.q .center { font-size: 32px; }
+/* значки мастей и придворный арт: картинка, под ней запасной символ (виден, если арт не загрузился) */
+.ci, .art { display: inline-grid; place-items: center; position: relative; }
+.ci { width: 1em; height: 1em; }
+.card .corner .ci { width: 13px; height: 13px; }
+.card .center .ci { width: 38px; height: 38px; }
+.card .center .art { width: 64px; height: 68px; }
+.card.q .center .art { width: 64px; height: 68px; }
+.ci b, .art b { font-weight: 900; }
+.art b { font-size: 32px; }
+.art-ok .ci, .art-ok .art { background: no-repeat center / contain; }
+.art-ok .ci b, .art-ok .art b { visibility: hidden; }
+.art-ok .ci-S { background-image: url("art/suit_S.webp"); } .art-ok .ci-C { background-image: url("art/suit_C.webp"); }
+.art-ok .ci-D { background-image: url("art/suit_D.webp"); } .art-ok .ci-H { background-image: url("art/suit_H.webp"); }
+.art-ok .art-JS { background-image: url("art/card_JS.webp"); }
+.art-ok .art-QS { background-image: url("art/card_QS.webp"); }
+.art-ok .art-KS { background-image: url("art/card_KS.webp"); }
+.art-ok .art-AS { background-image: url("art/card_AS.webp"); }
+.art-ok .art-JC { background-image: url("art/card_JC.webp"); }
+.art-ok .art-QC { background-image: url("art/card_QC.webp"); }
+.art-ok .art-KC { background-image: url("art/card_KC.webp"); }
+.art-ok .art-AC { background-image: url("art/card_AC.webp"); }
+.art-ok .art-JD { background-image: url("art/card_JD.webp"); }
+.art-ok .art-QD { background-image: url("art/card_QD.webp"); }
+.art-ok .art-KD { background-image: url("art/card_KD.webp"); }
+.art-ok .art-AD { background-image: url("art/card_AD.webp"); }
+.art-ok .art-JH { background-image: url("art/card_JH.webp"); }
+.art-ok .art-QH { background-image: url("art/card_QH.webp"); }
+.art-ok .art-KH { background-image: url("art/card_KH.webp"); }
+.art-ok .art-AH { background-image: url("art/card_AH.webp"); }
+.art-ok .card.court { background-image: linear-gradient(160deg, transparent 60%, var(--card-shade)), radial-gradient(circle at 50% 55%, rgba(255,201,60,.35), transparent 60%); }
+.art-ok .card.q { box-shadow: 4px 4px 0 var(--ink), inset 0 0 0 2px var(--sun); }
+.back {
+  background: var(--back);
+  background-image: radial-gradient(var(--back-2) 22%, transparent 24%), radial-gradient(var(--back-2) 22%, transparent 24%);
+  background-size: 14px 14px; background-position: 0 0, 7px 7px;
+  box-shadow: inset 0 0 0 4px var(--card), 4px 4px 0 var(--ink);
+}
+.art-ok .back { background: var(--back) url("art/back.webp") center / cover no-repeat; box-shadow: inset 0 0 0 3px var(--card), 4px 4px 0 var(--ink); }
+.mini.back { box-shadow: inset 0 0 0 2px var(--card), 2px 2px 0 var(--ink); }
+.art-ok .mini.back { box-shadow: inset 0 0 0 1.5px var(--card), 2px 2px 0 var(--ink); }
+
+/* ---- персонажи ---- */
+.ava-wrap { position: relative; width: 88px; height: 98px; }
+.ava { width: 100%; height: 100%; display: block; overflow: visible; }
+.ava-wrap.mood-in { animation: mood-in .5s var(--bounce); transform-origin: 50% 100%; }
+@keyframes mood-in { 0% { transform: scale(1.2, .8); } 40% { transform: scale(.9, 1.14); } 70% { transform: scale(1.04, .97); } 100% { transform: scale(1); } }
+.confetti { position: absolute; inset: 0; pointer-events: none; }
+.confetti i { position: absolute; left: 50%; top: 40%; width: 8px; height: 12px; background: var(--c); border: 2px solid var(--ink); border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(var(--a)) translateY(-10px); animation: burst 1.2s cubic-bezier(.2, .8, .3, 1) var(--dl) infinite; }
+@keyframes burst { 0% { transform: translate(-50%, -50%) rotate(var(--a)) translateY(-10px) rotate(0); opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(-1 * var(--r))) rotate(var(--rot)); opacity: 0; } }
+.me-ava { position: relative; }
+.me-ava .bubble { top: -36px; }
+
+/* ---- вы ---- */
+.me-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px auto 0; width: fit-content; padding: 4px 14px 2px; border-radius: 18px; }
+.me-row .ava-wrap { width: 78px; height: 88px; }
+.me-row .name { font-weight: 800; }
+.me-row .meta { font-size: 13px; color: var(--muted); }
+.me-row .meta b { color: var(--fg); }
+.hand { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; min-height: 112px; padding-block: 8px; padding-inline: 6px; }
+.hand .card { transition: transform .18s var(--bounce), box-shadow .18s, opacity .18s; }
+.hand .card.legal { box-shadow: 0 0 0 4px var(--sun), 4px 4px 0 4px var(--ink); cursor: pointer; }
+.hand .card.legal:hover { transform: translateY(-12px) rotate(-3deg); }
+.hand .card.dim { opacity: .55; cursor: default; }
+.hand .card.new { animation: pop .45s var(--bounce) both; }
+@keyframes pop { from { transform: translateY(30px) scale(.6) rotate(10deg); opacity: 0; } }
+.actions { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 44px; }
+.hint { font-size: 13px; color: var(--muted); }
+
+/* ---- оживление: попапы, тряска, бейджи ---- */
+.pop { position: absolute; transform: translate(-50%, -50%); font-family: var(--font-display); font-weight: 900; font-size: 22px; color: var(--fg);
+  -webkit-text-stroke: 1px var(--ink); text-shadow: 3px 3px 0 var(--ink); animation: pop-up 1.3s cubic-bezier(.2, .8, .3, 1) forwards; pointer-events: none; }
+.pop.bad { color: var(--berry); } .pop.good { color: var(--mint); } .pop.gold { color: var(--sun); font-size: 26px; }
+@keyframes pop-up { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.4); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); } 30% { transform: translate(-50%, -55%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -140%) scale(1); } }
+.app.shake { animation: shake .4s linear; } .app.shake-big { animation: shake .6s linear; }
+@keyframes shake { 0%,100% { transform: translate(0); } 20% { transform: translate(-6px, 2px) rotate(-.4deg); } 40% { transform: translate(5px, -3px) rotate(.4deg); } 60% { transform: translate(-4px, 2px); } 80% { transform: translate(3px, -1px); } }
+.badge-d { position: absolute; right: -2px; top: 4px; background: var(--card); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 7px; font-size: 10px; font-weight: 800; box-shadow: 2px 2px 0 var(--ink); transform: rotate(8deg); }
+.me-ava .badge-d { right: -14px; top: 0; }
+.badge-last { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%) rotate(-6deg); background: var(--berry); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 900; white-space: nowrap; box-shadow: 2px 2px 0 var(--ink); animation: last-pulse .7s ease-in-out infinite alternate; z-index: 2; }
+.me-ava .badge-last { bottom: -6px; }
+@keyframes last-pulse { from { transform: translateX(-50%) rotate(-6deg) scale(1); } to { transform: translateX(-50%) rotate(-6deg) scale(1.12); } }
+b.bump { display: inline-block; animation: bump .6s var(--bounce); color: var(--sun); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.7); } 100% { transform: scale(1); } }
+/* мягкое мерцание фонарей на фоне */
+.scene::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse at 15% 6%, rgba(255,190,80,.14), transparent 22%), radial-gradient(ellipse at 85% 6%, rgba(255,190,80,.14), transparent 22%);
+  animation: lantern 3.6s ease-in-out infinite alternate; }
+@keyframes lantern { from { opacity: .55; } to { opacity: 1; } }
+.app { position: relative; z-index: 1; }
+
+/* ---- летающие карты ---- */
+.fx { position: fixed; inset: 0; pointer-events: none; z-index: 15; }
+.fx .card, .fx .back { position: absolute; left: 0; top: 0; margin: 0; }
+
+/* ---- модальные окна ---- */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(20, 30, 40, .7); display: grid; place-items: center; z-index: 20; box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px;
+}
+.modal {
+  background: var(--panel); color: var(--panel-fg); border: 4px solid var(--ink); border-radius: 22px; padding: 22px 22px 18px;
+  width: min(580px, 100%); max-height: 100%; overflow: auto; box-sizing: border-box; box-shadow: 8px 8px 0 var(--ink);
+  animation: modal-in .4s var(--bounce);
+}
+@keyframes modal-in { from { transform: scale(.7) rotate(-2deg); opacity: 0; } }
+.modal h2 { font-family: var(--font-display); font-weight: 900; font-size: 22px; margin: 0 0 12px; text-wrap: balance; line-height: 1.15; }
+.modal h2.big { font-size: 40px; color: var(--sun); -webkit-text-stroke: 1.5px var(--ink); text-shadow: 3px 3px 0 var(--ink); }
+.modal p { margin: 0 0 12px; max-width: 62ch; }
+.modal .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 16px; }
+.modal .btn.quiet { color: var(--fg); }
+.suits { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.suit-btn { font-size: 42px; padding: 12px 0 10px; border-radius: 16px; background: var(--card); border: var(--outline); color: var(--black-suit); line-height: 1; box-shadow: 0 5px 0 var(--ink); transition: transform .1s; }
+.suit-btn.red { color: var(--red-suit); }
+.suit-btn:hover { transform: translateY(-3px) scale(1.04); }
+.suit-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
+.suit-btn small { display: block; font-family: var(--font-body); font-size: 12px; font-weight: 800; margin-top: 6px; }
+.offer { display: flex; align-items: center; gap: 18px; }
+table.score { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.score th, table.score td { padding: 7px 8px; text-align: left; border-bottom: 2px solid rgba(29,26,46,.12); vertical-align: top; }
+table.score th { font-size: 12px; font-weight: 800; color: #6b6878; }
+table.score td.num { text-align: right; font-weight: 800; }
+table.score td.neg { color: #1f9a4e; }
+table.score td.pos { color: #d12f2f; }
+table.score tr.me td { background: rgba(255,201,60,.25); }
+table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; background: var(--sun); color: var(--ink); border: 2px solid var(--ink); margin-left: 6px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-size: 13px; font-weight: 800; color: #6b6878; }
+.field input { background: #fff; border: var(--outline); color: var(--ink); padding: 10px 12px; border-radius: 12px; font-size: 16px; font-weight: 700; box-shadow: inset 3px 3px 0 rgba(29,26,46,.08); }
+.seg { display: flex; gap: 6px; }
+.seg button { flex: 1; padding: 10px 0; border-radius: 12px; border: var(--outline); background: #fff; color: var(--ink); font-weight: 800; box-shadow: 0 3px 0 var(--ink); }
+.seg button.on { background: var(--sun); transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.rules { font-size: 14px; }
+.net-status { font-size: 12px; font-weight: 800; color: var(--ink); background: var(--sun); border: 2px solid var(--ink); border-radius: 999px; padding: 2px 10px; }
+.net-err { color: #d12f2f; font-weight: 800; }
+.room-code { font-family: var(--font-display); letter-spacing: .12em; background: var(--sun); border: 3px solid var(--ink); border-radius: 12px; padding: 2px 10px; box-shadow: 3px 3px 0 var(--ink); }
+.linkrow { display: flex; gap: 8px; align-items: center; } .linkrow input { flex: 1; min-width: 0; font-size: 13px; }
+.lobby { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.lp { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100px; padding: 8px 4px; background: #fff; border: 3px solid var(--ink); border-radius: 16px; box-shadow: 3px 3px 0 var(--ink); }
+.lp.off { opacity: .55; } .lp .ava-wrap { width: 64px; height: 72px; }
+.lp-name { font-size: 13px; font-weight: 800; text-align: center; line-height: 1.2; }
+.lp .badge { margin-left: 0; display: block; margin-top: 2px; } .lp .badge.bot { background: var(--felt); color: #fff; } .lp .badge.off { background: var(--berry); }
+.lp.add { justify-content: center; font-weight: 900; font-size: 18px; cursor: pointer; background: var(--card); color: var(--ink); min-height: 120px; }
+.logl { list-style: none; margin: 0; padding: 0; font-size: 13px; max-height: 50vh; overflow: auto; }
+.logl li { padding: 5px 8px; border-bottom: 2px solid rgba(29,26,46,.1); }
+.logl li.k-end { background: rgba(255,201,60,.25); font-weight: 800; }
+.logl li.k-draw { color: #6b6878; }
+.rules h3 { font-family: var(--font-display); font-size: 15px; margin: 14px 0 6px; }
+.rules ul { margin: 0; padding-left: 18px; }
+.rules li { margin-bottom: 4px; }
+.points { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
+.points div { background: #fff; border: 2px solid var(--ink); border-radius: 10px; padding: 5px 8px; text-align: center; font-variant-numeric: tabular-nums; box-shadow: 2px 2px 0 var(--ink); }
+.points b { font-family: var(--font-display); }
+.start-ava { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
+.start-ava .ava-wrap { width: 58px; height: 65px; }
+.start-ava.pick { flex-wrap: wrap; gap: 4px; margin-bottom: 0; }
+.pick-btn { padding: 4px 2px 0; border: 3px solid transparent; border-radius: 14px; background: transparent; cursor: pointer; transition: transform .15s var(--bounce), background .15s; }
+.pick-btn:hover { transform: translateY(-3px) scale(1.06); background: rgba(255,255,255,.5); }
+.pick-btn.on { background: var(--sun); border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+.pick-btn .ava-wrap { width: 48px; height: 58px; }
+
+@media (max-width: 560px) {
+  .card, .back, .deck, .discard-slot { width: 58px; height: 82px; }
+  .card .corner { font-size: 14px; }
+  .card .center { font-size: 30px; }
+  .hand .card.legal:hover { transform: none; }
+  .seat { min-width: 80px; padding-inline: 2px; }
+  .seat .ava-wrap { width: 66px; height: 74px; }
+  .me-row .ava-wrap { width: 54px; height: 60px; }
+  .logo { font-size: 28px; }
+  .btn.small { padding: 5px 9px; font-size: 12px; }
+  .table { border-width: 7px; }
+  .status { min-width: 100px; }
+  .turn-note { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="app" id="app">
+  <div class="top">
+    <div class="logo">108</div>
+    <div class="round-chip" id="roundChip">партия 1</div>
+    <div class="net-status" id="netStatus" hidden></div>
+    <div class="spacer"></div>
+    <button class="btn small" id="btnSound" aria-label="Звук" title="Звук">🔊</button>
+    <button class="btn small" id="btnLog">Журнал</button>
+    <button class="btn small" id="btnScore">Счёт</button>
+    <button class="btn small" id="btnRules">Правила</button>
+    <button class="btn small" id="btnNew">Новая игра</button>
+  </div>
+  <div class="seats" id="seats"></div>
+  <div class="arena">
+    <div class="table">
+      <div class="pile">
+        <div class="deck" id="deck"></div>
+        <div class="lbl" id="deckLbl">колода</div>
+      </div>
+      <div class="status" id="status"></div>
+      <div class="pile">
+        <div class="discard-slot" id="discard"></div>
+        <div class="lbl" id="discardLbl">на столе</div>
+      </div>
+    </div>
+  </div>
+  <div class="me-row" id="meRow"></div>
+  <div class="hand" id="hand"></div>
+  <div class="actions" id="actions"></div>
+</div>
+<div class="fx" id="fx"></div>
+<div id="modals"></div>
+
+<script>
+/*__ENGINE__*/
+</script>
+<script>
+/*__AVATAR__*/
+</script>
+<script>
+/*__SPRITE__*/
+</script>
+<script>
+(function () {
+  const E = window.Engine108;
+  const BOT_NAMES = [['Тимур', 0], ['Дильноза', 1], ['Рустам', 0], ['Камила', 1], ['Шерзод', 0], ['Мадина', 1], ['Азиз', 0], ['Нигора', 1]];
+  // имена героев-спрайтов (бот всегда выглядит одинаково под своим именем)
+  const CHAR_NAMES = { m01: 'Санжар', m02: 'Тимур', m03: 'Рустам', m04: 'Шерзод', m05: 'Азиз', m06: 'Бахтиёр', m07: 'Джавохир',
+                       f01: 'Дильноза', f02: 'Камила', f03: 'Мадина', f04: 'Нигора', f05: 'Зухра', f06: 'Малика' };
+  const STYLES_M = [0, 3, 4], STYLES_F = [1, 2, 5];
+  const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let G = null, me = 0, botTimer = null, myName = 'Игрок';
+  const dlen = g => g.discardCount != null ? g.discardCount : g.discard.length;   // бита: онлайн приходит обрезанной
+  let lastHandIds = new Set();
+  let avatarSeeds = [];      // индекс аватара для каждого игрока
+  let dealing = false;
+  try { const n = localStorage.getItem('g108name'); if (n) myName = n; } catch (e) {}
+
+  // ---------- персонажи: спрайты SpriteCook (модуль Sprite108), запасной — векторный Avatar108 ----------
+  Avatar108.setReduced(REDUCED);
+  const SP = window.Sprite108 || null;
+  if (SP) SP.setReduced(REDUCED);
+  const useSprites = () => !!(SP && SP.ok);
+  const ALIAS = { reset: 'party', win: 'party', laugh6: 'laugh' };
+  const MOODS = Object.assign({}, Avatar108.MOOD_RIG, { reset: 1, win: 1 });
+  // seed игрока: id героя ('m01'…) для спрайтов; для векторного режима — число 0..23
+  const vecSeed = seed => typeof seed === 'number' ? seed : (SP ? SP.CHARS.indexOf(seed) : 0) % 24;
+  let myChar = null;
+  try { myChar = localStorage.getItem('g108char') || null; } catch (e) {}
+
+  // ---------- арт карт и фона (SpriteCook): включается, когда картинки доступны ----------
+  const ART = ['art/suit_S.webp', 'art/suit_C.webp', 'art/suit_D.webp', 'art/suit_H.webp', 'art/back.webp', 'art/felt.webp', 'art/bg.webp']
+    .concat('SCDH'.split('').flatMap(s => 'JQKA'.split('').map(r => `art/card_${r}${s}.webp`)));
+  (function artInit() {
+    let left = ART.length, failed = false;
+    ART.forEach(src => {
+      const im = new Image();
+      im.onload = im.onerror = (e) => {
+        if (e.type === 'error') failed = true;
+        if (--left === 0 && !failed) { document.documentElement.classList.add('art-ok'); document.body.classList.add('scene'); }
+      };
+      im.src = src;
+    });
+  })();
+
+  // ---------- настройки (запоминаются) ----------
+  const settings = { sound: true, level: 'pro' };
+  try { Object.assign(settings, JSON.parse(localStorage.getItem('g108settings') || '{}')); } catch (e) {}
+  function saveSettings() { try { localStorage.setItem('g108settings', JSON.stringify(settings)); } catch (e) {} }
+  const LEVELS = [['greedy', 'Новичок'], ['eights', 'Обычный'], ['pro', 'Профи']];
+
+  // ---------- звуки: синтез WebAudio, без файлов ----------
+  // ---------- звуки: настоящие записи карт (Kenney, CC0), интерфейсные звуки Kenney и мультяшные стингеры реакций (sfx/*.mp3) ----------
+  const SFX = (() => {
+    const BASE = 'sfx/';
+    // имя события → файлы (случайный выбор) и громкость
+    const LIB = {
+      click:   { f: ['ui_click_002', 'ui_click_004'], v: .5 },
+      select:  { f: ['ui_select_001'], v: .5 },
+      ok:      { f: ['ui_confirmation_001', 'ui_confirmation_003'], v: .6 },
+      play:    { f: ['card-place-1', 'card-place-2', 'card-place-3', 'card-place-4'], v: 1 },
+      draw:    { f: ['card-slide-1', 'card-slide-2', 'card-slide-3', 'card-slide-4', 'card-slide-5', 'card-slide-6'], v: 1 },
+      deal:    { f: ['card-slide-1', 'card-slide-3', 'card-slide-5'], v: .9 },
+      shove:   { f: ['card-shove-1', 'card-shove-2', 'card-shove-3', 'card-shove-4'], v: .9 },
+      shuffle: { f: ['deal_shuffle'], v: .5 },
+      penalty: { f: ['penalty'], v: .55 },
+      queen:   { f: ['queen'], v: .45 },
+      win:     { f: ['win'], v: .6 },
+      lose:    { f: ['lose'], v: .55 },
+      reset:   { f: ['reset'], v: .6 },
+      tada:    { f: ['tada_short'], v: .5 },
+      boing:   { f: ['boing'], v: .5 },
+      // реакции героев
+      laugh:   { f: ['laugh'], v: .55 }, party: { f: ['party'], v: .55 }, happy: { f: ['happy'], v: .45 }, excited: { f: ['excited'], v: .45 },
+      evil:    { f: ['evil'], v: .5 },   smug:  { f: ['smug'], v: .45 },  sly:   { f: ['sly'], v: .5 },     relief:  { f: ['relief'], v: .45 },
+      cry:     { f: ['cry'], v: .5 },    sad:   { f: ['sad'], v: .45 },   devastated: { f: ['devastated'], v: .5 }, pout: { f: ['pout'], v: .45 },
+      angry:   { f: ['angry'], v: .55 }, annoyed: { f: ['ui_error_002', 'ui_error_006'], v: .5 }, worried: { f: ['worried'], v: .45 }, nervous: { f: ['nervous'], v: .4 },
+      shocked: { f: ['shocked'], v: .5 }, meh:  { f: ['meh', 'ui_drop_001'], v: .5 }, think: { f: ['think', 'ui_question_001'], v: .35 }, overwhelmed: { f: ['overwhelmed'], v: .45 },
+      neutral: { f: [], v: 0 },
+    };
+    const pool = {}, lastAt = {};
+    let ok = null;                                        // null — не проверяли, false — файлы недоступны
+    function get(name) {
+      if (!pool[name]) { const a = new Audio(BASE + name + '.mp3'); a.preload = 'auto'; a.onerror = () => { ok = false; }; pool[name] = [a]; }
+      const free = pool[name].find(a => a.paused || a.ended);
+      if (free) return free;
+      if (pool[name].length < 4) { const a = pool[name][0].cloneNode(); pool[name].push(a); return a; }
+      return pool[name][0];
+    }
+    function play(k, opts) {
+      if (!settings.sound) return;
+      const e = LIB[k]; if (!e || !e.f.length) return;
+      const o = opts || {};
+      const now = performance.now();
+      if (lastAt[k] && now - lastAt[k] < (o.minGap == null ? 90 : o.minGap)) return;   // одно и то же событие — не чаще
+      lastAt[k] = now;
+      const name = e.f[Math.floor(Math.random() * e.f.length)];
+      const a = get(name);
+      try { a.volume = Math.min(1, e.v * (o.vol || 1)); a.playbackRate = o.rate || (1 + (Math.random() - .5) * .08); a.currentTime = 0; a.play().catch(() => {}); } catch (x) {}
+    }
+    function preload() { Object.values(LIB).forEach(e => e.f.forEach(get)); }
+    // разблокировать звук на мобильных первым касанием
+    function warm() { try { const a = get('ui_click_002'); a.volume = 0; a.play().then(() => { a.pause(); a.volume = 1; }).catch(() => {}); } catch (x) {} }
+    return { play, preload, warm, LIB };
+  })();
+  window.SFX108 = SFX;   // для отладки из консоли: SFX108.play('cry')
+  // реакция → звук (несколько героев с одной эмоцией — один стингер; хохот стола — один «ба-дум-тсс»)
+  const MOOD_SFX = { neutral: null, think: 'think', happy: 'happy', laugh: 'laugh', party: 'party', evil: 'evil', smug: 'smug', sly: 'sly', excited: 'excited',
+    pout: 'pout', sad: 'sad', cry: 'cry', devastated: 'devastated', angry: 'angry', annoyed: 'annoyed', worried: 'worried', nervous: 'nervous', meh: 'meh',
+    shocked: 'shocked', relief: 'relief', overwhelmed: 'overwhelmed', reset: 'reset', win: 'win' };
+  function moodSound(mood, pid) {
+    const k = MOOD_SFX[mood]; if (!k) return;
+    // «думает» и «так себе» — только у ботов и тихо, чтобы не надоедать
+    if ((k === 'think' || k === 'meh' || k === 'neutral') && Math.random() < .5) return;
+    SFX.play(k, { minGap: 700 });
+  }
+  const charIdOf = pid => { const s = avatarSeeds[pid]; return typeof s === 'string' ? s : (SP ? SP.charOf(s) : 'm01'); };
+  const PHRASES = {
+    evil: ['Держи!', 'Ха-ха!', 'Это тебе!', 'Получай!', 'Сюрприз!'],
+    laugh: ['Ха-ха-ха!', 'Ну ты попал!', 'Ахахаха!', 'Беру попкорн', 'Это надо было видеть!', 'Ой, не могу!'],
+    smug: ['Отбито!', 'Не на того напал!', 'Мимо!', 'Ха! Лови обратно'],
+    sly: ['Хитро…', 'Заказываю масть', 'Так-то лучше'],
+    excited: ['Последняя!', 'Одна осталась!', 'Почти!'],
+    pout: ['Ну ладно…', 'Пф.', 'Ладно, беру'],
+    sad: ['Ну вот…', 'За что?', 'Эх…', 'Обидно'],
+    cry: ['Неееет!', 'Это нечестно!', 'Ааа!', 'Да сколько можно'],
+    devastated: ['#$%&!!!', 'Я всё…', 'Катастрофа!', 'Как так?!', 'Пощады!'],
+    angry: ['Ну всё!', 'Я запомню!', 'Грр!', 'Ты за это ответишь'],
+    annoyed: ['Эй!', 'Опять пропуск?', 'Ну и ладно.', 'Серьёзно?'],
+    worried: ['Ой-ой…', 'Только не это!', 'Мамочки…', 'Чем отбиться?'],
+    nervous: ['Тяну…', 'Ну давай, давай…', 'Где же покрытие?'],
+    meh: ['Беру.', 'Нечем.', 'Посмотрим…'],
+    shocked: ['Что?!', 'Ого!', 'Ничего себе!'],
+    party: ['Ура!', 'Закрыл!', 'Йес!', 'Это победа!'],
+    relief: ['Фух!', 'Пронесло', 'Чуть не…'],
+    reset: ['107! Обнуляюсь!', 'Ровно 107, ха!'],
+    win: ['Победа!', 'Я лучший!', 'Кто следующий?'],
+    think: ['Хм…', 'Так-так…', 'Дайте подумать', 'Сейчас…'],
+    idle: ['Ну что, ходи уже!', 'Чай будете?', 'Я подожду…', 'Долго думаешь', 'Карты не убегут', 'Тик-так', 'Кто-нибудь, ходите!'],
+  };
+  // личные словечки героев — иногда подменяют общую реплику
+  const CHAR_PHRASES = {
+    m06: { laugh: ['Эх, молодёжь!', 'Ха-ха, вот это да!'], idle: ['В наше время играли быстрее', 'Чайку бы…'], evil: ['Учись, пока я жив!'], smug: ['Опыт, сынок'] },
+    f06: { laugh: ['Ой, не могу, детки!'], idle: ['Ай, что сидим?', 'Самса стынет'], cry: ['Вай, какой кошмар!'], angry: ['Ну-ка без фокусов!'] },
+    m03: { evil: ['Держи, брат!', 'Крепись!'], angry: ['Эй, полегче!'], laugh: ['Хо-хо-хо!'] },
+    m05: { party: ['Йуху-у!', 'Я чемпион!'], cry: ['Это нече-е-естно!'], idle: ['Ну давайте уже!', 'Скучно!'] },
+    f02: { laugh: ['Ахаха, я не могу!'], smug: ['Кто тут королева?'], excited: ['Ещё чуть-чуть!'] },
+    m07: { smug: ['Спокойно, всё под контролем'], evil: ['Ничего личного'], meh: ['Как скажете'] },
+    f01: { sly: ['Заказываю… сюрприз!'], angry: ['Вы это видели?!'] },
+    f03: { think: ['По моим расчётам…'], smug: ['Как я и говорила'] },
+    f04: { party: ['Ура-а, закрыла!'], evil: ['Лови!'] },
+    f05: { relief: ['Слава богу!'], worried: ['Ой, мама…'] },
+    m02: { evil: ['Ха, попался!'], smug: ['Легко'] },
+    m04: { think: ['Хм, интересная позиция'], shocked: ['Не может быть!'] },
+    m01: { excited: ['Ещё одна — и всё!'], sad: ['Ну вот опять…'] },
+  };
+  function phraseFor(pid, mood) {
+    const id = avatarSeeds[pid], own = CHAR_PHRASES[id] && CHAR_PHRASES[id][mood];
+    const pool = (own && Math.random() < .45) ? own : PHRASES[mood];
+    return pool ? pool[Math.floor(Math.random() * pool.length)] : null;
+  }
+  function avatar(seed, mood, cls) {
+    const m = ALIAS[mood] || mood;
+    let h = useSprites() ? SP.avatar(seed, m, cls) : Avatar108.avatar(vecSeed(seed), m, cls);
+    if ((m === 'party') && !REDUCED) h = h.replace(/<\/div>\s*$/, confettiHTML() + '</div>');
+    return h;
+  }
+  function confettiHTML() {
+    const cols = ['#ffc93c', '#e03c3c', '#4f7bd9', '#2fa38a', '#ff6b6b', '#fff'];
+    let h = '<div class="confetti">';
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * 360 + Math.random() * 20, dist = 46 + Math.random() * 40;
+      h += `<i style="--a:${a}deg;--r:${dist}px;--c:${cols[i % cols.length]};--dl:${(Math.random() * .25).toFixed(2)}s;--rot:${Math.floor(Math.random() * 360)}deg"></i>`;
+    }
+    return h + '</div>';
+  }
+
+  // ---------- настроения ----------
+  const moods = {};          // pid → {mood, until}
+  const moodTimers = {};
+  function baseMood(pid) {
+    const p = G.players[pid];
+    if (ACTIVE.has(G.phase) && G.current === pid) return 'think';
+    if (p.hand.length === 1 && G.phase === 'play') return 'excited';
+    if (p.hand.length >= 9) return 'overwhelmed';
+    return 'neutral';
+  }
+  function moodOf(pid) {
+    const m = moods[pid];
+    return m && m.until > Date.now() ? m.mood : baseMood(pid);
+  }
+  function say(pid, text) {
+    const el = document.querySelector(`[data-bubble="${pid}"]`);
+    if (!el || !text) return;
+    el.textContent = text;
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    const host = pid === me ? $('meRow') : document.querySelector(`.seat[data-pid="${pid}"]`);
+    const talk = host && host.querySelector('.talk-anim');
+    if (talk && talk.beginElement && !REDUCED) { try { talk.beginElement(); } catch (e) {} }
+    if (SP && host) SP.talk(host);
+  }
+  function setMood(pid, mood, ms, text) {
+    moods[pid] = { mood, until: Date.now() + (ms || 2800) };
+    clearTimeout(moodTimers[pid]);
+    moodTimers[pid] = setTimeout(() => updateAvatar(pid), (ms || 2800) + 30);
+    updateAvatar(pid);
+    if (text === undefined) text = phraseFor(pid, mood);
+    if (text) say(pid, text);
+    if (text) moodSound(ALIAS[mood] || mood, pid);                  // стингер — только вместе с репликой
+    if (mood === 'party' || mood === 'win' || mood === 'reset') popAt(pid, mood === 'reset' ? '107 → 0' : '🎉', 'gold');
+  }
+  // ---------- всплывающие подписи у места (+5, −20, 🎉) и тряска ----------
+  function popAt(pid, text, cls) {
+    if (REDUCED) return;
+    const r = pid === me ? rectOf('#meRow') : rectOf(`.seat[data-pid="${pid}"] .ava-wrap`);
+    if (!r) return;
+    const el = document.createElement('div');
+    el.className = 'pop ' + (cls || ''); el.textContent = text;
+    el.style.left = (r.left + r.width / 2) + 'px'; el.style.top = (r.top + r.height * .3) + 'px';
+    $('fx').appendChild(el); setTimeout(() => el.remove(), 1400);
+  }
+  function shake(strength) { if (REDUCED) return; const a = $('app'); a.classList.remove('shake', 'shake-big'); void a.offsetWidth; a.classList.add(strength > 1 ? 'shake-big' : 'shake'); }
+  // ---------- живой стол: боты болтают в паузах и меняют выражение лица ----------
+  let lastActionAt = Date.now(), lastIdleAt = 0;
+  setInterval(() => {
+    if (!G || !ACTIVE.has(G.phase) || document.querySelector('.modal-bg') || dealing) return;
+    const now = Date.now();
+    const bots = G.players.filter(p => p.isBot && !(moods[p.id] && moods[p.id].until > now));
+    if (!bots.length) return;
+    if (G.current === me && now - lastActionAt > 7000 && now - lastIdleAt > 9000) {        // человек задумался — боты подгоняют
+      lastIdleAt = now;
+      const b = bots[Math.floor(Math.random() * bots.length)];
+      setMood(b.id, ['annoyed', 'meh', 'think', 'sly'][Math.floor(Math.random() * 4)], 2600, phraseFor(b.id, 'idle'));
+    } else if (Math.random() < .07) {                                                       // просто ожил: посмотрел по сторонам
+      const b = bots.filter(p => p.id !== G.current)[Math.floor(Math.random() * bots.length)];
+      if (b) setMood(b.id, ['think', 'sly', 'meh', 'smug', 'neutral'][Math.floor(Math.random() * 5)], 1500 + Math.random() * 1200, null);
+    }
+  }, 1000);
+  function updateAvatar(pid) {
+    if (!G) return;
+    const host = pid === me ? $('meRow') : document.querySelector(`.seat[data-pid="${pid}"]`);
+    if (!host) return;
+    const old = host.querySelector('.ava-wrap'); if (!old) return;
+    const next = moodOf(pid);
+    if (old.dataset.mood === (ALIAS[next] || next)) return;
+    const wrap = document.createElement('div'); wrap.innerHTML = avatar(avatarSeeds[pid], next, 'mood-in');
+    old.replaceWith(wrap.firstElementChild);
+  }
+  // по снимку «до» и состоянию «после» понять, кто что почувствовал
+  function reactToDiff(b) {
+    const played = dlen(G) - b.discard;
+    const actor = b.current;
+    const afterPending = G.pending, afterCover = G.mustCover;
+    const roundOver = G.phase === 'roundEnd' || G.phase === 'gameOver';
+    if (roundOver) { reactToRoundEnd(); return; }
+    if (played > 0) {
+      const c = G.discard[G.discard.length - 1];
+      const isAttack = c.rank === '6' || c.rank === '7' || (c.rank === 'K' && c.suit === 'H');
+      SFX.play('play'); if (c.rank === 'Q') SFX.play('queen'); else if (isAttack) SFX.play('penalty');
+      if (isAttack && b.pending) {                 // отбился своей шестёркой/семёркой — и передал дальше
+        setMood(actor, 'smug');
+        setMood(G.current, 'worried', 2600, `Беру ${afterPending.draws}?!`);
+      } else if (isAttack) {
+        setMood(actor, 'evil');
+        setMood(G.current, 'worried');
+      } else if (c.rank === '9' && c.suit === 'H' && b.pending && b.pending.kind === 'K') {
+        setMood(actor, 'smug', 2800, 'Девятка червей!');
+      } else if (c.rank === 'A') {
+        setMood(actor, 'evil', 2600, 'Пропускаешь!');
+        const skipped = (actor + 1) % G.players.length;
+        if (skipped !== actor) setMood(skipped, 'annoyed');
+      } else if (c.rank === 'Q') {
+        setMood(actor, 'sly');
+      } else if (c.rank === '8' && afterCover && G.current === actor) {
+        const p = G.players[actor];
+        if (!p.hand.some(x => x.suit === afterCover || x.rank === 'Q' || x.rank === '8')) setMood(actor, 'nervous');
+        else setMood(actor, 'happy', 1500, null);
+      } else if (b.mustCover && !afterCover) {
+        setMood(actor, 'relief');
+      } else {
+        setMood(actor, 'happy', 1500, null);
+      }
+      return;
+    }
+    // кто-то взял карты
+    G.players.forEach((p, i) => {
+      const drew = p.hand.length - b.hands[i];
+      if (drew <= 0) return;
+      for (let k = 0; k < Math.min(drew, 6); k++) setTimeout(() => SFX.play('draw', { minGap: 0 }), k * 90);
+      if (b.pending) { popAt(i, `+${drew}`, 'bad'); if (drew >= 4) shake(drew >= 6 ? 2 : 1); }
+      else if (b.mustCover && drew >= 2) popAt(i, `+${drew}`, 'bad');
+      if (b.pending) {                                // штраф
+        const mood = drew <= 1 ? 'pout' : drew <= 3 ? 'sad' : drew <= 5 ? 'cry' : 'devastated';
+        setMood(i, mood, drew >= 4 ? 4500 : 3200, `Беру ${drew}… ` + PHRASES[mood][Math.floor(Math.random() * PHRASES[mood].length)]);
+        // обидчик злорадствует, а при большом штрафе смеётся весь стол
+        const prev = (i - 1 + G.players.length) % G.players.length;
+        G.players.forEach(q => {
+          if (q.id === i) return;
+          if (drew >= 4) {
+            setMood(q.id, q.id === prev ? 'evil' : 'laugh', 4000, q.id === prev ? 'Ха-ха-ха!' : undefined);
+          }
+          else if (q.id === prev) setMood(q.id, 'evil', 2000, null);
+        });
+      } else if (b.mustCover) {                       // тянул до покрытия
+        setMood(i, drew >= 4 ? 'cry' : 'nervous', 2800, `Тянул ${drew}…`);
+      } else if (G.phase === 'counterOffer') {
+        setMood(i, 'shocked', 2000, 'О! Есть чем отбиться!');
+      } else {
+        setMood(i, 'meh', 1800);
+      }
+    });
+    if (G.phase === 'play' && G.current === b.current && G.drawnCard === null) { /* ничего */ }
+    if (b.current === G.current && played === 0 && !G.drawnCard && b.hands.every((h, i) => h === G.players[i].hand.length)) {
+      // пас не меняет руку — ловим по логу
+    }
+    const last = G.log[G.log.length - 1];
+    if (last && /пасует/.test(last.t)) setMood(last.p, 'meh', 1500, 'Пас.');
+  }
+  function reactToRoundEnd() {
+    const r = G.lastRound;
+    const mine = r.results.find(x => x.idx === me);
+    if (G.phase === 'gameOver') SFX.play(G.losers.includes(me) ? 'lose' : 'win');
+    else if (mine && mine.reset) SFX.play('reset');
+    else if (r.finisher === me) SFX.play('win');
+    else if (mine && mine.pts >= 12) SFX.play('lose');
+    else SFX.play('shove');
+    r.results.forEach(res => {
+      if (res.pts) setTimeout(() => popAt(res.idx, (res.pts > 0 ? '+' : '−') + Math.abs(res.pts), res.pts > 0 ? 'bad' : 'good'), 250);
+      if (res.reset) setMood(res.idx, 'reset', 60000);
+      else if (res.idx === r.finisher) setMood(res.idx, 'party', 60000, res.pts < 0 ? `Закрыл на даму: ${res.pts}!` : undefined);
+      else if (res.pts >= 25) setMood(res.idx, 'devastated', 60000, `+${res.pts}… за что?!`);
+      else if (res.pts >= 12) setMood(res.idx, 'angry', 60000, `+${res.pts}. Ну всё!`);
+      else if (res.pts > 0) setMood(res.idx, 'sad', 60000, `+${res.pts}`);
+      else setMood(res.idx, 'relief', 60000);
+    });
+    if (G.phase === 'gameOver') {
+      G.players.forEach(p => {
+        if (G.losers.includes(p.id)) setMood(p.id, 'cry', 60000, '108… я проиграл');
+        else setMood(p.id, 'win', 60000);
+      });
+    }
+  }
+
+  // ---------- рендер ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const isRed = c => c.suit === 'H' || c.suit === 'D';
+  const order = c => E.SUITS.indexOf(c.suit) * 10 + E.RANKS.indexOf(c.rank);
+  const ACTIVE = new Set(['play', 'chooseSuit', 'counterOffer']);
+
+  // карта: углы — номинал + значок масти (картинка, запасной — символ), центр — придворный арт (В/Д/К/Т) или крупный значок масти
+  function cardHTML(c, cls, attrs) {
+    const court = 'JQKA'.includes(c.rank);
+    const sym = `<i class="ci ci-${c.suit}"><b>${E.SUIT_SYM[c.suit]}</b></i>`;
+    return `<button type="button" class="card ${isRed(c) ? 'red' : ''} ${c.rank === 'Q' ? 'q' : ''} ${court ? 'court' : 'pip'} r${c.rank} ${cls || ''}" ${attrs || ''} aria-label="${E.cardName(c)}">
+      <span class="corner">${E.RANK_RU[c.rank]}<span class="s">${sym}</span></span>
+      <span class="center">${court ? `<i class="art art-${c.rank}${c.suit}"><b>${E.SUIT_SYM[c.suit]}</b></i>` : sym}</span>
+      <span class="corner b">${E.RANK_RU[c.rank]}<span class="s">${sym}</span></span>
+    </button>`;
+  }
+
+  const prevScores = {};
+  function render() {
+    if (!G) return;
+    const lm = E.legalMoves(G);
+    const myTurn = G.current === me && ACTIVE.has(G.phase);
+    $('roundChip').textContent = `партия ${G.round}`;
+
+    // соперники
+    $('seats').innerHTML = G.players.filter(p => p.id !== me).map(p => `
+      <div class="seat ${G.current === p.id && ACTIVE.has(G.phase) ? 'active' : ''}" data-pid="${p.id}">
+        <div class="bubble" data-bubble="${p.id}"></div>
+        ${avatar(avatarSeeds[p.id], moodOf(p.id))}
+        ${p.id === G.dealer ? '<div class="badge-d" title="Сдаёт">сдаёт</div>' : ''}
+        ${p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : ''}
+        <div class="name">${esc(p.name)}</div>
+        <div class="fan" ${dealing ? 'style="visibility:hidden"' : ''}>${Array.from({ length: Math.min(p.hand.length, 12) }, () => '<div class="mini back"></div>').join('')}</div>
+        <div class="meta"><span><b>${p.hand.length}</b> ${E.plural(p.hand.length)}</span><span>счёт <b class="${prevScores[p.id] !== undefined && prevScores[p.id] !== p.score ? 'bump' : ''}">${p.score}</b></span></div>
+      </div>`).join('');
+
+    // колода и стол
+    const deckEl = $('deck');
+    const deckClickable = myTurn && G.phase === 'play' && lm.canDraw;
+    deckEl.className = 'deck' + (deckClickable ? ' clickable' : '');
+    deckEl.innerHTML = G.deck.length ? '<div class="back"></div><div class="back"></div><div class="back"></div>' : '<div class="back" style="opacity:.25"></div>';
+    deckEl.setAttribute('role', 'button'); deckEl.tabIndex = deckClickable ? 0 : -1;
+    deckEl.setAttribute('aria-label', lm.drawLabel);
+    $('deckLbl').textContent = `колода · ${G.deck.length}`;
+    const t = E.top(G);
+    $('discard').innerHTML = cardHTML(t, '', 'tabindex="-1"');
+    $('discardLbl').textContent = `бито · ${dlen(G)}`;
+
+    // статус
+    let st = '';
+    if (G.pending) {
+      const what = G.pending.kind === 'K' ? '9♥' : (G.pending.kind === '6' ? 'шестёркой' : 'семёркой');
+      st += `<div class="chip danger">Штраф: взять ${G.pending.draws}${G.pending.count < 4 ? ' или отбиться ' + what : ''}</div>`;
+    }
+    if (G.mustCover) st += `<div class="chip danger">Покрыть восьмёрку: ${E.SUIT_SYM[G.mustCover]}, дама или 8</div>`;
+    if (t.rank === 'Q' && G.chosenSuit && !G.pending) st += `<div class="chip gold">Заказано <span class="suit-big">${E.SUIT_SYM[G.chosenSuit]}</span></div>`;
+    if (ACTIVE.has(G.phase)) {
+      st += G.current === me ? `<div class="turn-note you">Ваш ход!</div>` : `<div class="turn-note wait">ходит ${esc(G.players[G.current].name)}</div>`;
+    }
+    const lastLog = G.log.filter(l => l.k !== 'info').slice(-1)[0];
+    if (lastLog && !G.pending && !G.mustCover) st += `<div class="last-act">${esc(lastLog.t)}</div>`;
+    $('status').innerHTML = st;
+    $('meRow').classList.toggle('active', myTurn);
+
+    // вы
+    const p = G.players[me];
+    $('meRow').innerHTML = `<div class="me-ava"><div class="bubble" data-bubble="${me}"></div>${avatar(avatarSeeds[me], moodOf(me))}${me === G.dealer ? '<div class="badge-d">сдаёте</div>' : ''}${p.hand.length === 1 && G.phase === 'play' ? '<div class="badge-last">последняя!</div>' : ''}</div><div><div class="name">${esc(p.name)}</div><div class="meta">счёт <b class="${prevScores[me] !== undefined && prevScores[me] !== p.score ? 'bump' : ''}">${p.score}</b> · до 108 осталось <b>${Math.max(0, 108 - p.score)}</b></div></div>`;
+    G.players.forEach(q => { prevScores[q.id] = q.score; });
+    const hand = p.hand.slice().sort((a, b) => order(a) - order(b));
+    const legal = new Set(myTurn && G.phase === 'play' ? lm.cards : []);
+    $('hand').innerHTML = hand.map(c => cardHTML(c,
+      (legal.has(c.id) ? 'legal' : (myTurn && G.phase === 'play' ? 'dim' : '')) + (lastHandIds.has(c.id) ? '' : ' new'),
+      `data-id="${c.id}" ${legal.has(c.id) ? '' : 'tabindex="-1"'}`)).join('');
+    $('hand').style.visibility = dealing ? 'hidden' : '';
+    lastHandIds = new Set(p.hand.map(c => c.id));
+
+    // действия
+    let a = '';
+    if (myTurn && G.phase === 'play') {
+      if (lm.canDraw) a += `<button class="btn ${lm.cards.length && !G.pending ? '' : 'primary'}" data-act="draw">${esc(lm.drawLabel)}</button>`;
+      if (lm.canPass) a += `<button class="btn primary" data-act="pass">Пас</button>`;
+      if (lm.canFinishQueens) a += `<button class="btn primary" data-act="queens">Сбросить всех дам и закрыть партию</button>`;
+      if (lm.cards.length && !lm.canPass) a += `<span class="hint">${G.pending || G.mustCover ? 'Подсвеченной картой можно отбиться' : 'Сыграйте подсвеченную карту или возьмите из колоды'}</span>`;
+    }
+    $('actions').innerHTML = a;
+
+
+    // модальные окна по фазе
+    if (G.phase === 'chooseSuit' && G.current === me) showSuitModal();
+    else if (G.phase === 'counterOffer' && G.current === me) showCounterModal();
+    else if (G.phase === 'roundEnd') setTimeout(showRoundModal, 500);
+    else if (G.phase === 'gameOver') setTimeout(showGameOverModal, 500);
+    else if (document.querySelector('.modal-bg[data-auto]')) closeModal();
+  }
+
+  // ---------- летающие карты ----------
+  function rectOf(sel) { const el = typeof sel === 'string' ? document.querySelector(sel) : sel; return el ? el.getBoundingClientRect() : null; }
+  function seatRect(pid) { return pid === me ? rectOf('#hand') : rectOf(`.seat[data-pid="${pid}"] .fan`); }
+  function fly(from, to, face, opts) {
+    if (REDUCED || !from || !to) return Promise.resolve();
+    const o = Object.assign({ dur: 420, delay: 0, rot: 0 }, opts || {});
+    const el = document.createElement('div');
+    el.innerHTML = face ? cardHTML(face, '', 'tabindex="-1"') : '<div class="back"></div>';
+    const node = el.firstElementChild;
+    $('fx').appendChild(node);
+    const w = node.offsetWidth, h = node.offsetHeight;
+    const fx = from.left + from.width / 2 - w / 2, fy = from.top + from.height / 2 - h / 2;
+    const tx = to.left + to.width / 2 - w / 2, ty = to.top + to.height / 2 - h / 2;
+    const anim = node.animate([
+      { transform: `translate(${fx}px, ${fy}px) rotate(${o.rot}deg) scale(.9)`, opacity: 1 },
+      { transform: `translate(${tx}px, ${ty}px) rotate(0deg) scale(1)`, opacity: 1 },
+    ], { duration: o.dur, delay: o.delay, easing: 'cubic-bezier(.3, 1.3, .5, 1)', fill: 'both' });
+    return anim.finished.catch(() => {}).then(() => node.remove());
+  }
+
+  // снимок до действия → после действия вычисляем, что полетело
+  function snap() {
+    const handRects = {};
+    document.querySelectorAll('#hand .card').forEach(el => { handRects[el.dataset.id] = el.getBoundingClientRect(); });
+    return {
+      current: G.current, discard: dlen(G), round: G.round,
+      pending: G.pending, mustCover: G.mustCover,
+      hands: G.players.map(p => p.hand.length),
+      deck: rectOf('#deck'), disc: rectOf('#discard'), handRects, seats: G.players.map(p => seatRect(p.id)),
+    };
+  }
+  function animateDiff(b) {
+    if (G.round !== b.round) return animateDeal();
+    const flights = [];
+    const played = dlen(G) - b.discard;
+    const playedBy = {};
+    if (played > 0 && dlen(G) >= b.discard) {
+      const cards = G.discard.slice(-played);
+      playedBy[b.current] = played;
+      cards.forEach((c, i) => {
+        const from = b.current === me ? (b.handRects[c.id] || b.seats[me]) : b.seats[b.current];
+        flights.push(fly(from, b.disc, c, { delay: i * 90, rot: b.current === me ? -12 : 12 }));
+      });
+      if (b.disc) { $('discard').style.visibility = 'hidden'; }
+    }
+    G.players.forEach((p, i) => {
+      const drew = p.hand.length - b.hands[i] + (playedBy[i] || 0);
+      if (drew > 0) {
+        for (let k = 0; k < Math.min(drew, 8); k++) flights.push(fly(b.deck, b.seats[i], null, { delay: k * 70, dur: 380, rot: -20 }));
+      }
+    });
+    return Promise.all(flights).then(() => { $('discard').style.visibility = ''; });
+  }
+  function animateDeal() {
+    Object.keys(moods).forEach(k => delete moods[k]);
+    dealing = true; render();
+    const deck = rectOf('#deck'), flights = [];
+    const n = G.players.length;
+    let seat = (G.dealer + 1) % n, k = 0;
+    for (let c = 0; c < 4 * n; c++) {
+      setTimeout(() => SFX.play('deal', { minGap: 0, vol: .7 }), k * 55);
+      flights.push(fly(deck, seatRect(seat), null, { delay: k++ * 55, dur: 360, rot: -25 }));
+      seat = (seat + 1) % n;
+    }
+    const opener = E.top(G);
+    $('discard').style.visibility = 'hidden';
+    flights.push(fly(deck, rectOf('#discard'), opener, { delay: k * 55 + 100, dur: 420, rot: 180 }));
+    return Promise.all(flights).then(() => { dealing = false; $('discard').style.visibility = ''; render(); });
+  }
+  // выполнить действие с анимацией
+  function act(fn) {
+    const b = snap();
+    lastActionAt = Date.now();
+    fn();
+    closeModal();
+    render();
+    if (G.round === b.round) reactToDiff(b);
+    saveGame();
+    return animateDiff(b);
+  }
+  // ---------- сохранение партии между перезагрузками ----------
+  function saveGame() {
+    if (NET.online) return;
+    try { if (G && G.phase !== 'gameOver') localStorage.setItem('g108save', JSON.stringify({ G, me, myName, avatarSeeds, t: Date.now() })); else localStorage.removeItem('g108save'); } catch (e) {}
+  }
+  function loadGame() {
+    try { const d = JSON.parse(localStorage.getItem('g108save') || 'null'); return d && d.G && d.G.players ? d : null; } catch (e) { return null; }
+  }
+
+  // ---------- модальные окна ----------
+  function modal(html, auto) {
+    closeModal();
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg'; if (auto) bg.dataset.auto = '1';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`;
+    $('modals').appendChild(bg);
+    const f = bg.querySelector('input') || bg.querySelector('.btn.primary') || bg.querySelector('button'); if (f) f.focus({ preventScroll: true });
+    return bg;
+  }
+  function closeModal() { $('modals').innerHTML = ''; }
+
+  function showSuitModal() {
+    if (document.querySelector('.modal-bg[data-kind="suit"]')) return;
+    const bg = modal(`<h2>Какую масть заказываете?</h2><div class="suits">${E.SUITS.map(s =>
+      `<button class="suit-btn ${s === 'H' || s === 'D' ? 'red' : ''}" data-suit="${s}">${E.SUIT_SYM[s]}<small>${E.SUIT_RU[s]}</small></button>`).join('')}</div>`, true);
+    bg.dataset.kind = 'suit';
+    bg.querySelectorAll('[data-suit]').forEach(b => b.onclick = () => doAct('suit', b.dataset.suit));
+  }
+  function showCounterModal() {
+    if (document.querySelector('.modal-bg[data-kind="offer"]')) return;
+    const c = G.players[me].hand.find(x => x.id === G.offerCard);
+    const bg = modal(`<h2>Первой картой пришла ${E.cardName(c)}!</h2>
+      <div class="offer">${cardHTML(c, '', 'tabindex="-1"')}<p>Можно отбиться ею — штраф уйдёт дальше, а брать ничего не нужно. Или взять все ${G.pending.draws} ${E.plural(G.pending.draws)}.</p></div>
+      <div class="row"><button class="btn" data-act="decline">Взять ${G.pending.draws}</button><button class="btn primary" data-act="accept">Отбиться</button></div>`, true);
+    bg.dataset.kind = 'offer';
+    bg.querySelector('[data-act=accept]').onclick = () => doAct('accept');
+    bg.querySelector('[data-act=decline]').onclick = () => doAct('decline');
+  }
+  function scoreRows(results) {
+    return results.map(r => {
+      const p = G.players[r.idx];
+      const handTxt = r.hand.length ? r.hand.map(id => E.RANK_RU[id.slice(0, -1)] + E.SUIT_SYM[id.slice(-1)]).join(' ') : '—';
+      return `<tr class="${r.idx === me ? 'me' : ''}"><td>${esc(p.name)}${r.idx === G.lastRound.finisher ? '<span class="badge">закрыл</span>' : ''}<div class="note">${esc(r.note)}</div></td>
+        <td class="note">${handTxt}</td>
+        <td class="num ${r.pts < 0 ? 'neg' : (r.pts > 0 ? 'pos' : '')}">${r.pts > 0 ? '+' : ''}${r.pts}</td>
+        <td class="num">${r.before} → <b>${r.after}</b>${r.reset ? '<span class="badge">107 → 0</span>' : ''}</td></tr>`;
+    }).join('');
+  }
+  function showRoundModal() {
+    if (!G || G.phase !== 'roundEnd' || document.querySelector('.modal-bg[data-kind="round"]')) return;
+    const fin = G.players[G.lastRound.finisher];
+    const bg = modal(`<h2>Партия ${G.round} закончена — закрыл ${esc(fin.name)}</h2>
+      <table class="score"><thead><tr><th>Игрок</th><th>На руках</th><th>Очки</th><th>Счёт</th></tr></thead><tbody>${scoreRows(G.lastRound.results)}</tbody></table>
+      <div class="row"><button class="btn primary" data-act="next">Следующая партия</button></div>`, true);
+    bg.dataset.kind = 'round';
+    bg.querySelector('[data-act=next]').onclick = () => { if (NET.online) { closeModal(); NET.send({ t: 'next' }); return; } closeModal(); E.startRound(G); lastHandIds = new Set(); saveGame(); SFX.play('shuffle'); animateDeal().then(scheduleBots); };
+  }
+  function showGameOverModal() {
+    if (!G || G.phase !== 'gameOver' || document.querySelector('.modal-bg[data-kind="over"]')) return;
+    const losers = G.losers.map(i => G.players[i].name).join(' и ');
+    const iLost = G.losers.includes(me);
+    const many = G.losers.length > 1;
+    const bg = modal(`<h2 class="big">${iLost ? 'Вы набрали 108' : 'Победа!'}</h2>
+      <p>${iLost ? (many ? `Проиграли ${esc(losers)} — все, кто набрал 108 и больше.` : 'Игра проиграна — кто первым набирает 108, тот и проиграл.') : `${many ? 'Проиграли' : 'Проиграл'} ${esc(losers)} — ${many ? 'набрали' : 'набрал'} 108 и больше.`}</p>
+      <table class="score"><thead><tr><th>Игрок</th><th>На руках</th><th>Очки</th><th>Итог</th></tr></thead><tbody>${scoreRows(G.lastRound.results)}</tbody></table>
+      <div class="row"><button class="btn" data-act="hist">История партий</button><button class="btn primary" data-act="new">Новая игра</button></div>`, true);
+    bg.dataset.kind = 'over';
+    bg.querySelector('[data-act=new]').onclick = () => { if (NET.online) { NET.send({ t: 'newGame' }); closeModal(); } else showStart(); };
+    bg.querySelector('[data-act=hist]').onclick = showScoreModal;
+  }
+  function showScoreModal() {
+    const n = G.players.length;
+    const rows = G.history.map(h => `<tr><td>${h.round}</td>${h.results.map(r =>
+      `<td class="num ${r.pts < 0 ? 'neg' : (r.pts > 0 ? 'pos' : '')}">${r.pts > 0 ? '+' : ''}${r.pts}${r.reset ? '<span class="badge">0</span>' : ''}</td>`).join('')}</tr>`).join('');
+    modal(`<h2>Счёт</h2>
+      <table class="score"><thead><tr><th>Партия</th>${G.players.map(p => `<th>${esc(p.name)}</th>`).join('')}</tr></thead>
+      <tbody>${rows || `<tr><td colspan="${n + 1}" class="note">Ещё ни одной законченной партии</td></tr>`}
+      <tr><td><b>Итого</b></td>${G.players.map(p => `<td class="num"><b>${p.score}</b></td>`).join('')}</tr></tbody></table>
+      <p class="note" style="color:#6b6878;font-size:12px;margin-top:10px">Проигрывает тот, кто набирает 108. Ровно 107 — счёт обнуляется.</p>
+      <div class="row"><button class="btn primary" data-act="close">Закрыть</button></div>`);
+    document.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
+  }
+  function showLogModal() {
+    const rows = G.log.slice().reverse().map(l => `<li class="k-${l.k}">${esc(l.t)}</li>`).join('');
+    modal(`<h2>Журнал партии ${G.round}</h2><ul class="logl">${rows || '<li class="k-info">Пока пусто</li>'}</ul>
+      <div class="row"><button class="btn primary" data-act="close">Закрыть</button></div>`);
+    document.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
+  }
+  function showRulesModal(back) {
+    modal(`<h2>Правила «108»</h2><div class="rules">
+      <h3>Раздача</h3><ul><li>Колода 36 карт, каждому по 4. Сдающий берёт 3, его четвёртая карта открывает стол и действует сразу: туз — первый игрок пропускает ход, 6/7/король червей — штраф первому, дама — сдающий заказывает масть, восьмёрка — первый игрок её покрывает.</li><li>Первую партию сдаёт последний за столом, дальше — тот, у кого больше всего очков.</li></ul>
+      <h3>Ход</h3><ul><li>На карту кладут такую же по достоинству или той же масти.</li><li>В любой свой ход можно вместо хода взять одну карту из колоды. После этого можно сходить любой подходящей картой из руки или спасовать.</li></ul>
+      <h3>Особые карты</h3><ul>
+        <li><b>Туз</b> — следующий пропускает ход.</li>
+        <li><b>6</b> — следующий берёт 1 карту или отбивается своей шестёркой, тогда следующий берёт 2 и так далее (до 4). Если первая вытянутая карта — шестёрка, ею можно отбиться.</li>
+        <li><b>7</b> — то же самое, но по 2 карты (до 8).</li>
+        <li><b>Король червей</b> — следующий берёт 5 или отбивается 9♥ (из руки или первой вытянутой).</li>
+        <li><b>Дама</b> — кладётся на любую карту (кроме штрафа) и заказывает масть.</li>
+        <li><b>8</b> — надо покрыть картой той же масти, дамой или другой восьмёркой. Нечем — тянете из колоды, пока не попадётся.</li>
+      </ul>
+      <h3>Очки за карты в руке</h3>
+      <div class="points"><div>6 <b>6</b></div><div>7 <b>7</b></div><div>8 <b>8</b></div><div>9 <b>0</b></div><div>10 <b>10</b></div><div>В <b>2</b></div><div>Д <b>3</b></div><div>К <b>4</b></div><div>Т <b>11</b></div></div>
+      <h3>Дамы</h3><ul>
+        <li>Закрыли партию дамой — <b>−20</b>, пиковой <b>−40</b>. Остались одни дамы — можно сбросить все сразу (−20 за каждую).</li>
+        <li>Партию закрыл другой, а у вас одни дамы — <b>+20</b> за каждую, пиковая +40. Дамы вперемешку с другими картами — по 3.</li>
+      </ul>
+      <h3>Игра</h3><ul><li>Партия заканчивается, когда кто-то выложил последнюю карту. Очки копятся. Кто набрал 108 и больше — проиграл; если таких несколько, проигрывают все. Ровно 107 — счёт обнуляется.</li></ul>
+      </div><div class="row"><button class="btn primary" data-act="close">Понятно</button></div>`);
+    document.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
+  }
+  function showStart() {
+    let n = 3;
+    try { n = parseInt(localStorage.getItem('g108n')) || 3; } catch (e) {}
+    const PREVIEW = ['party', 'evil', 'cry', 'sly', 'shocked', 'angry', 'laugh', 'think', 'worried', 'smug', 'devastated', 'relief', 'excited'];
+    const bg = modal(`<h2 class="big">108</h2>
+      ${useSprites()
+        ? `<div class="field"><label>Ваш герой</label><div class="start-ava pick" id="pick">${SP.CHARS.map((c, i) => `<button class="pick-btn ${c === myChar ? 'on' : ''}" data-char="${c}" title="${SP.LABEL[c]}">${avatar(c, PREVIEW[i % PREVIEW.length])}</button>`).join('')}</div></div>`
+        : `<div class="start-ava">${[['party',0],['evil',1],['cry',2],['sly',3],['shocked',4],['angry',5]].map(([m,i]) => avatar(i, m)).join('')}</div>`}
+      <p>Карточная игра на 36 карт, от 2 до 6 игроков. Кто наберёт 108 очков — проиграл.</p>
+      <div class="field"><label for="nameInput">Ваше имя</label><input id="nameInput" value="${esc(myName)}" maxlength="16"></div>
+      <div class="field"><label>Игроков за столом</label><div class="seg" id="seg">${[2, 3, 4, 5, 6].map(k => `<button class="${k === n ? 'on' : ''}" data-n="${k}">${k}</button>`).join('')}</div></div>
+      <div class="field"><label>Сила ботов</label><div class="seg" id="lvl">${LEVELS.map(([k, t]) => `<button class="${k === settings.level ? 'on' : ''}" data-lvl="${k}">${t}</button>`).join('')}</div></div>
+      <div class="row"><button class="btn" data-act="rules">Правила</button>${NET.available ? '<button class="btn" data-act="online">🌐 С друзьями</button>' : ''}<button class="btn primary" data-act="start">Сдать карты</button></div>`);
+    const onl = bg.querySelector('[data-act=online]'); if (onl) onl.onclick = () => { myName = bg.querySelector('#nameInput').value.trim() || 'Игрок'; try { localStorage.setItem('g108name', myName); } catch (e) {} showOnlineModal(); };
+    bg.querySelectorAll('#seg button').forEach(b => b.onclick = () => { n = +b.dataset.n; bg.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x === b)); });
+    bg.querySelectorAll('#lvl button').forEach(b => b.onclick = () => { settings.level = b.dataset.lvl; saveSettings(); bg.querySelectorAll('#lvl button').forEach(x => x.classList.toggle('on', x === b)); });
+    bg.querySelector('[data-act=rules]').onclick = () => showRulesModal(showStart);
+    bg.querySelectorAll('.pick-btn').forEach(b => b.onclick = () => {
+      const same = b.classList.contains('on');
+      bg.querySelectorAll('.pick-btn').forEach(x => x.classList.remove('on'));
+      myChar = same ? null : b.dataset.char;            // повторный клик — снова случайный герой
+      if (!same) b.classList.add('on');
+      try { if (myChar) localStorage.setItem('g108char', myChar); else localStorage.removeItem('g108char'); } catch (e) {}
+    });
+    if (useSprites()) SP.preload(null, () => { closeModal(); showStart(); });
+    bg.querySelector('[data-act=start]').onclick = () => {
+      myName = bg.querySelector('#nameInput').value.trim() || 'Вы';
+      try { localStorage.setItem('g108name', myName); localStorage.setItem('g108n', n); } catch (e) {}
+      newGame(n);
+    };
+  }
+
+  // ---------- онлайн: комнаты по ссылке (server.js, WebSocket /ws) ----------
+  const NET = (() => {
+    const available = /^https?:$/.test(location.protocol) && !/claude\.ai$/.test(location.hostname);   // артефакт на claude.ai — без сервера
+    const api = { available, online: false, room: null, token: null, pid: -1, lobby: null, ws: null, send: () => {}, leave: () => {} };
+    let ws = null, reconnectT = null, wantRoom = null, onJoinErr = null;
+    const url = () => (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
+    function saveSess() { try { if (api.room && api.token) localStorage.setItem('g108online', JSON.stringify({ room: api.room, token: api.token })); else localStorage.removeItem('g108online'); } catch (e) {} }
+    function loadSess() { try { return JSON.parse(localStorage.getItem('g108online') || 'null'); } catch (e) { return null; } }
+    function connect(room, token, errCb) {
+      wantRoom = room || ''; api.token = token || null; onJoinErr = errCb || null;
+      if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
+      ws = new WebSocket(url()); api.ws = ws;
+      ws.onopen = () => ws.send(JSON.stringify({ t: 'join', room: wantRoom, name: myName, char: myChar, token: api.token }));
+      ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } handle(m); };
+      ws.onclose = () => { if (api.online) { setStatus('Связь потеряна, переподключаюсь…'); reconnectT = setTimeout(() => connect(api.room, api.token), 1500); } else if (onJoinErr) { const cb = onJoinErr; onJoinErr = null; cb('Онлайн-сервер недоступен по этому адресу'); } };
+      ws.onerror = () => {};
+    }
+    function handle(m) {
+      if (m.t === 'joined') { api.online = true; api.room = m.room; api.token = m.token; api.pid = m.pid; wantRoom = m.room; saveSess(); setStatus(''); history.replaceState(null, '', '?room=' + m.room); }
+      else if (m.t === 'lobby') { api.lobby = m; if (!m.started) showLobbyModal(m); else { const lb = document.querySelector('.modal-bg[data-kind="lobby"]'); if (lb) closeModal(); } }
+      else if (m.t === 'state') { onState(m); }
+      else if (m.t === 'error') { if (!api.online && onJoinErr) onJoinErr(m.msg); else setStatus(m.msg); if (!api.online) { api.token = null; saveSess(); } }
+    }
+    function setStatus(t) { const el = $('netStatus'); if (el) { el.textContent = t; el.hidden = !t; } }
+    api.send = m => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); };
+    api.connect = connect;
+    api.leave = () => { clearTimeout(reconnectT); api.online = false; api.send({ t: 'leave' }); if (ws) { ws.onclose = null; ws.close(); } ws = null; api.room = null; api.token = null; api.lobby = null; G = null; saveSess(); history.replaceState(null, '', location.pathname); setStatus(''); };
+    api.resume = () => { const sess = loadSess(); const q = (new URLSearchParams(location.search).get('room') || '').toUpperCase(); if (q && sess && sess.room === q) return sess; if (q) return { room: q, ask: true }; if (sess) return sess; return null; };
+    return api;
+  })();
+  // пришло состояние стола от сервера
+  function onState(m) {
+    const prev = G, b = prev ? snap() : null;
+    G = m.G; me = m.me; avatarSeeds = m.seeds; lastActionAt = Date.now();
+    if (SP) SP.preload(avatarSeeds, () => render()); SFX.preload();
+    if (!prev || !b || G.round !== b.round) { Object.keys(moods).forEach(k => delete moods[k]); closeModal(); lastHandIds = new Set(); SFX.play('shuffle'); animateDeal(); return; }
+    closeModal(); render(); reactToDiff(b); animateDiff(b);
+  }
+  function showOnlineModal(err) {
+    const q = new URLSearchParams(location.search).get('room') || '';
+    const bg = modal(`<h2>Игра с друзьями</h2>
+      <p>Создайте комнату и отправьте друзьям ссылку — или введите код комнаты, который прислали вам. Свободные места можно занять ботами.</p>
+      ${err ? `<p class="net-err">${esc(err)}</p>` : ''}
+      <div class="field"><label for="nameInput2">Ваше имя</label><input id="nameInput2" value="${esc(myName)}" maxlength="16"></div>
+      ${useSprites() ? `<div class="field"><label>Ваш герой</label><div class="start-ava pick">${SP.CHARS.map(c => `<button class="pick-btn ${c === myChar ? 'on' : ''}" data-char="${c}" title="${SP.LABEL[c]}">${avatar(c, 'neutral')}</button>`).join('')}</div></div>` : ''}
+      <div class="field"><label for="roomInput">Код комнаты</label><input id="roomInput" value="${esc(q)}" maxlength="4" placeholder="например, K7PQ" style="text-transform:uppercase"></div>
+      <div class="row"><button class="btn" data-act="back">Назад</button><button class="btn" data-act="join">Войти по коду</button><button class="btn primary" data-act="create">Создать комнату</button></div>`);
+    bg.querySelector('[data-act=back]').onclick = showStart;
+    bg.querySelectorAll('.pick-btn').forEach(b => b.onclick = () => { bg.querySelectorAll('.pick-btn').forEach(x => x.classList.remove('on')); myChar = b.dataset.char; b.classList.add('on'); try { localStorage.setItem('g108char', myChar); } catch (e) {} });
+    const go = room => { myName = bg.querySelector('#nameInput2').value.trim() || 'Игрок'; try { localStorage.setItem('g108name', myName); } catch (e) {} bg.querySelectorAll('.btn').forEach(x => x.disabled = true); NET.connect(room, null, msg => showOnlineModal(msg)); };
+    bg.querySelector('[data-act=create]').onclick = () => go('');
+    bg.querySelector('[data-act=join]').onclick = () => { const r = bg.querySelector('#roomInput').value.trim().toUpperCase(); if (r.length === 4) go(r); else bg.querySelector('#roomInput').focus(); };
+    bg.querySelector('#roomInput').addEventListener('keydown', e => { if (e.key === 'Enter') bg.querySelector('[data-act=join]').click(); });
+  }
+  function showLobbyModal(l) {
+    const host = l.players.some(p => p.host && p.pid === NET.pid);
+    const link = location.origin + location.pathname + '?room=' + l.room;
+    const existing = document.querySelector('.modal-bg[data-kind="lobby"]');
+    const html = `<h2>Комната <span class="room-code">${esc(l.room)}</span></h2>
+      <div class="field"><label>Ссылка для друзей</label><div class="linkrow"><input id="linkInput" readonly value="${esc(link)}"><button class="btn small" data-act="copy">Копировать</button></div></div>
+      <div class="lobby">${l.players.map(p => `<div class="lp ${p.online ? '' : 'off'}">${avatar(p.char, p.host ? 'smug' : 'neutral')}<div class="lp-name">${esc(p.name)}${p.host ? ' <span class="badge">хозяин</span>' : ''}${p.isBot ? ' <span class="badge bot">бот</span>' : ''}${!p.online ? ' <span class="badge off">нет связи</span>' : ''}</div>${host && p.isBot ? `<button class="btn small" data-rm="${p.pid}">убрать</button>` : ''}</div>`).join('')}
+        ${l.players.length < 6 && host ? '<button class="lp add" data-act="bot">+ бот</button>' : ''}</div>
+      ${host ? `<div class="field"><label>Сила ботов</label><div class="seg" id="lvl">${LEVELS.map(([k, t]) => `<button class="${k === l.level ? 'on' : ''}" data-lvl="${k}">${t}</button>`).join('')}</div></div>` : `<p class="note">Ждём, пока хозяин комнаты начнёт игру…</p>`}
+      <div class="row"><button class="btn" data-act="leave">Выйти</button>${host ? `<button class="btn primary" data-act="start" ${l.players.length < 2 ? 'disabled' : ''}>Начать (${l.players.length})</button>` : ''}</div>`;
+    const bg = existing ? (existing.querySelector('.modal').innerHTML = html, existing) : modal(html);
+    bg.dataset.kind = 'lobby';
+    bg.querySelector('[data-act=copy]').onclick = () => { const inp = bg.querySelector('#linkInput'); inp.select(); try { navigator.clipboard.writeText(link); } catch (e) { document.execCommand('copy'); } bg.querySelector('[data-act=copy]').textContent = 'Скопировано'; };
+    bg.querySelector('[data-act=leave]').onclick = () => { NET.leave(); showStart(); };
+    const st = bg.querySelector('[data-act=start]'); if (st) st.onclick = () => NET.send({ t: 'start' });
+    const ab = bg.querySelector('[data-act=bot]'); if (ab) ab.onclick = () => NET.send({ t: 'addBot' });
+    bg.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => NET.send({ t: 'removeBot', pid: +b.dataset.rm }));
+    bg.querySelectorAll('#lvl button').forEach(b => b.onclick = () => NET.send({ t: 'level', level: b.dataset.lvl }));
+  }
+
+  // ---------- игра ----------
+  function newGame(n) {
+    Object.keys(moods).forEach(k => delete moods[k]);
+    const names = BOT_NAMES.slice().sort(() => Math.random() - .5);
+    const players = [{ name: myName, isBot: false }];
+    const sprites = useSprites();
+    let seeds = [];
+    if (sprites) {
+      // герой игрока — выбранный или случайный; боты — остальные герои под своими именами, парни и девушки вперемешку
+      const mine = myChar && SP.CHARS.includes(myChar) ? myChar : SP.CHARS[Math.floor(Math.random() * SP.CHARS.length)];
+      const rest = SP.CHARS.filter(c => c !== mine).sort(() => Math.random() - .5);
+      seeds = [mine, ...rest.slice(0, n - 1)];
+      for (let i = 1; i < n; i++) players.push({ name: CHAR_NAMES[seeds[i]] || names[i - 1][0], isBot: true, strategy: settings.level });
+    } else {
+      for (let i = 1; i < n; i++) players.push({ name: names[i - 1][0], isBot: true, strategy: settings.level });
+    }
+    G = E.createGame({ players });
+    me = 0;
+    if (sprites) {
+      avatarSeeds = seeds;
+      SP.preload(avatarSeeds, () => render());
+      SFX.preload();
+    } else {
+      // векторный режим: причёска по имени, цвета — разные у всех за столом
+      const used = new Set();
+      const pick = (styles) => { for (let t = 0; t < 40; t++) { const st = styles[Math.floor(Math.random() * styles.length)]; const seed = st + 6 * Math.floor(Math.random() * 4); if (!used.has(seed)) { used.add(seed); return seed; } } return Math.floor(Math.random() * 24); };
+      avatarSeeds = G.players.map((p, i) => i === 0 ? pick([0, 1, 2, 3, 4, 5]) : pick(names[i - 1][1] ? STYLES_F : STYLES_M));
+    }
+    E.startRound(G);
+    lastHandIds = new Set();
+    closeModal();
+    saveGame(); SFX.play('shuffle');
+    animateDeal().then(scheduleBots);
+  }
+  function myMove(fn) { clearTimeout(botTimer); act(fn).then(scheduleBots); }
+  // одно действие игрока: онлайн — на сервер, иначе — в локальный движок
+  function doAct(kind, arg) {
+    if (NET.online) { NET.send({ t: 'act', a: kind, card: kind === 'play' ? arg : undefined, suit: kind === 'suit' ? arg : undefined }); return; }
+    const fns = { play: () => E.playCard(G, arg), draw: () => E.draw(G), pass: () => E.pass(G), queens: () => E.finishWithQueens(G),
+      suit: () => E.chooseSuit(G, arg), accept: () => E.acceptCounter(G), decline: () => E.declineCounter(G) };
+    if (fns[kind]) myMove(fns[kind]);
+  }
+  function scheduleBots() {
+    clearTimeout(botTimer);
+    if (!G || NET.online) return;
+    const p = G.players[G.current];
+    if (!ACTIVE.has(G.phase) || !p.isBot) return;
+    botTimer = setTimeout(() => { act(() => E.botAction(G)).then(scheduleBots); }, G.phase === 'play' ? 800 : 500);
+  }
+
+  // ---------- события ----------
+  $('hand').addEventListener('click', e => {
+    const b = e.target.closest('.card.legal'); if (!b) return;
+    doAct('play', b.dataset.id);
+  });
+  $('actions').addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const act_ = b.dataset.act;
+    doAct(act_);
+  });
+  const deckClick = () => { if ($('deck').classList.contains('clickable')) doAct('draw'); };
+  $('deck').addEventListener('click', deckClick);
+  $('deck').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); deckClick(); } });
+  $('btnScore').onclick = () => G && showScoreModal();
+  $('btnRules').onclick = () => showRulesModal();
+  $('btnNew').onclick = () => { if (NET.online) { if (confirm('Выйти из онлайн-комнаты?')) { NET.leave(); showStart(); } } else showStart(); };
+  $('btnLog').onclick = () => G && showLogModal();
+  const syncSoundBtn = () => { $('btnSound').textContent = settings.sound ? '🔊' : '🔇'; $('btnSound').title = settings.sound ? 'Звук включён' : 'Звук выключен'; };
+  $('btnSound').onclick = () => { settings.sound = !settings.sound; saveSettings(); syncSoundBtn(); SFX.warm(); SFX.play('click'); };
+  syncSoundBtn();
+  document.addEventListener('pointerdown', () => SFX.warm(), { once: true });
+  document.addEventListener('click', e => { if (e.target.closest('.btn, .seg button, .suit-btn, .pick-btn')) SFX.play(e.target.closest('.btn.primary') ? 'ok' : 'click'); }, true);
+  window.addEventListener('resize', () => { if (G) render(); });
+
+  // ---------- запуск (с восстановлением при обновлении страницы) ----------
+  function start(data) {
+    const sess = NET.available ? NET.resume() : null;
+    if (sess && sess.ask) { showOnlineModal(); return; }
+    if (sess) { NET.connect(sess.room, sess.token || null, msg => showOnlineModal(msg)); return; }
+    if (!(data && data.G)) data = loadGame() || data;
+    if (data && data.G) {
+      G = data.G; me = data.me || 0; myName = data.myName || myName;
+      avatarSeeds = data.avatarSeeds || G.players.map((p, i) => i * 7 % 24);
+      if (SP) SP.preload(avatarSeeds, () => render());
+      SFX.preload();
+      if (G.phase === 'roundEnd' || G.phase === 'gameOver') reactToRoundEnd();
+      
+      render(); scheduleBots();
+    } else showStart();
+  }
+  if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
+    window.claude.hot.snapshot(() => ({ G, me, myName, avatarSeeds }));
+  }
+  window.claude && window.claude.hot && window.claude.hot.ready ? window.claude.hot.ready(start) : start((window.claude && window.claude.hot && window.claude.hot.data) || {});
+})();
+</script>

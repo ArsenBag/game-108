@@ -1,0 +1,150 @@
+{
+ "note": "Листы эмоций 4x2 (1024x1024, прозрачный фон). Ячейки: neutral, laugh, cry, angry / shocked, smug, worried, think. Модель gpt-image-2.5-flare, 1K, medium. Стиль-референс для всех (style_asset_ids): лист m01. Локальные файлы: sprites/sheets/<id>.png",
+ "characters": [
+  {
+   "id": "m01",
+   "name": "Санжар",
+   "label": "тёмные взъерошенные волосы, бирюзовая футболка",
+   "base_asset_id": "8986a212-1278-4822-8f38-892e5304baa0",
+   "sheet_asset_id": "0480aaa5-1f48-4ce8-a508-601f0c532255",
+   "sha12": "249395b3150d"
+  },
+  {
+   "id": "m02",
+   "name": "Тимур",
+   "label": "чёрный андеркат, щетина, жёлтая футболка",
+   "sheet_asset_id": "684f145c-6806-4f51-b416-453c0154d7f2",
+   "sha12": "abb6c1274587"
+  },
+  {
+   "id": "m03",
+   "name": "Рустам",
+   "label": "лысый, борода, красное худи",
+   "sheet_asset_id": "345c63f5-62ef-46af-ab83-c8c9e3fd8423",
+   "sha12": "a11af50d6b2d"
+  },
+  {
+   "id": "m04",
+   "name": "Шерзод",
+   "label": "кудри, круглые очки, синяя футболка",
+   "sheet_asset_id": "bd33f4f2-f39a-4f8d-bf45-715f22334416",
+   "sha12": "8025b9ee4e6b"
+  },
+  {
+   "id": "m05",
+   "name": "Азиз",
+   "label": "блондин-ёжик, веснушки, оранжевая футболка",
+   "sheet_asset_id": "dab8e285-51f4-48d5-aaad-917c7837b3e5",
+   "sha12": "8629879118dd"
+  },
+  {
+   "id": "m06",
+   "name": "Бахтиёр",
+   "label": "седой с усами, зелёное поло",
+   "sheet_asset_id": "6b52aced-257d-4593-a850-a77af32254a6",
+   "sha12": "3e10d09c3ffa"
+  },
+  {
+   "id": "m07",
+   "name": "Джавохир",
+   "label": "пучок, бородка, серьга, фиолетовая футболка",
+   "sheet_asset_id": "08243d2d-7707-4793-bd19-0e1fd7262525",
+   "sha12": "3a14f08ee800"
+  },
+  {
+   "id": "f01",
+   "name": "Дильноза",
+   "label": "длинные чёрные волосы, красный топ",
+   "sheet_asset_id": "d47fa995-3787-4382-81c1-ce54b94cd098",
+   "sha12": "7b9aa38735e0"
+  },
+  {
+   "id": "f02",
+   "name": "Камила",
+   "label": "рыжие кудри, веснушки, жёлтый топ",
+   "sheet_asset_id": "bf3002fc-bcea-4fd4-9e53-4ab407e23210",
+   "sha12": "2178d4327702"
+  },
+  {
+   "id": "f03",
+   "name": "Мадина",
+   "label": "тёмное каре, очки, фиолетовый топ",
+   "sheet_asset_id": "06883f5a-51a6-49d6-aa61-8b15705ce3e8",
+   "sha12": "5a70e7ab50c9"
+  },
+  {
+   "id": "f04",
+   "name": "Нигора",
+   "label": "хвост, каштановые волосы, синий топ",
+   "sheet_asset_id": "d68aadfe-69f3-46ea-8319-335b733f9c1c",
+   "sha12": "50c02d39a84c"
+  },
+  {
+   "id": "f05",
+   "name": "Зухра",
+   "label": "оранжевый платок, коралловый топ",
+   "sheet_asset_id": "f65414b5-8b37-43b0-9e22-4c45b3461d0d",
+   "sha12": "b6e909432f93"
+  },
+  {
+   "id": "f06",
+   "name": "Малика",
+   "label": "седой пучок, очки, розовый кардиган",
+   "sheet_asset_id": "03b51043-a988-4535-889a-681dd1cb1031",
+   "sha12": "82f779781bd6"
+  }
+ ],
+ "art": {
+  "note": "Арт карт и стола (29.10.2026), модель gpt-image-2.5-flare. Исходники: art/src/*.png, нарезка — art/src/slice_art.py. Придворные листы: 4 ячейки в ряд J,Q,K,A; стиль-референс — лист m01.",
+  "items": [
+   {
+    "file": "back.png",
+    "what": "рубашка карт (9:16, узор ikat/suzani)",
+    "asset_id": "07ba3359-2621-4ad7-a654-eda235c64777",
+    "sha12": "6759c8442fa7"
+   },
+   {
+    "file": "suits.png",
+    "what": "значки мастей S,C,D,H в ряд",
+    "asset_id": "530bbeab-bdad-4c64-8a71-927eb27b6efb",
+    "sha12": "ca65201dc287"
+   },
+   {
+    "file": "bg.png",
+    "what": "фон: чайхана ночью, 16:9",
+    "asset_id": "ff6ff99a-f188-45bf-88d6-489df105584c",
+    "sha12": "b58d09b8ab12"
+   },
+   {
+    "file": "felt.png",
+    "what": "текстура сукна (mode=texture)",
+    "asset_id": "e8bd609e-b9d7-455d-a75c-47bfcdebd054",
+    "sha12": "e9f0ba1a3725"
+   },
+   {
+    "file": "court_H.png",
+    "what": "червы: В, Д, К, Т",
+    "asset_id": "4b43f350-6d1b-47b0-8bc3-359aa137bdb4",
+    "sha12": "5f0acf08d769"
+   },
+   {
+    "file": "court_D.png",
+    "what": "бубны: В, Д, К, Т",
+    "asset_id": "e9a50eba-d75f-4451-a0d7-0fbd45c19be3",
+    "sha12": "290475383d0c"
+   },
+   {
+    "file": "court_S.png",
+    "what": "пики: В, Д, К, Т",
+    "asset_id": "74570b37-f645-4d66-9ab7-a0ad3cabe7de",
+    "sha12": "e9961b6fe95f"
+   },
+   {
+    "file": "court_C.png",
+    "what": "трефы: В, Д, К, Т",
+    "asset_id": "fcef087c-2f67-4ea7-b626-e1379f07d940",
+    "sha12": "0b93d88b2cee"
+   }
+  ]
+ }
+}

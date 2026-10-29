@@ -1,0 +1,6 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@900&display=swap">
+<style>body{margin:0;background:#2fa38a;font:800 13px Nunito,sans-serif;color:#fff}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:10px}.c{text-align:center}.ava-wrap{width:140px;height:156px;margin:auto}.ava{width:100%;height:100%;display:block}</style></head><body><div class="grid" id="g"></div>
+<script src="avatar.js"></script><script>
+const moods=Object.keys(Avatar108.MOOD_RIG); const g=document.getElementById('g');
+moods.forEach((m,i)=>{const c=document.createElement('div');c.className='c';c.innerHTML=Avatar108.avatar(i,m)+'<div>'+m+'</div>';g.appendChild(c);});
+</script></body></html>
