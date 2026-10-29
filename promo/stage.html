@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>108 · промо</title>
+<style>
+@font-face { font-family: "Rubik"; font-weight: 900; src: url("fonts/rubik-cyrillic-900-normal.woff") format("woff"); unicode-range: U+0400-04FF; }
+@font-face { font-family: "Rubik"; font-weight: 900; src: url("fonts/rubik-latin-900-normal.woff") format("woff"); unicode-range: U+0000-03FF, U+2000-206F, U+2190-21FF, U+2212; }
+@font-face { font-family: "Rubik"; font-weight: 700; src: url("fonts/rubik-cyrillic-700-normal.woff") format("woff"); unicode-range: U+0400-04FF; }
+@font-face { font-family: "Rubik"; font-weight: 700; src: url("fonts/rubik-latin-700-normal.woff") format("woff"); unicode-range: U+0000-03FF, U+2000-206F, U+2190-21FF, U+2212; }
+:root { --ink: #1d1a2e; --sun: #ffc93c; --berry: #ff6b6b; --mint: #8de3a5; --sky: #5ad7ff; --violet: #9b59b6; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0b1630; }
+#stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; font-family: "Rubik", sans-serif; color: #fff; }
+.layer { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
+.bg { position: absolute; inset: -80px; background: center / cover no-repeat; will-change: transform; }
+.shade { position: absolute; inset: 0; }
+.t { position: absolute; left: 40px; right: 40px; text-align: center; font-weight: 900; line-height: 1.02; letter-spacing: -.01em;
+  -webkit-text-stroke: 16px var(--ink); paint-order: stroke fill; text-wrap: balance; }
+.s { position: absolute; left: 60px; right: 60px; text-align: center; font-weight: 700; font-size: 46px; line-height: 1.2;
+  -webkit-text-stroke: 10px var(--ink); paint-order: stroke fill; text-wrap: balance; }
+.card { position: absolute; width: 300px; height: 425px; border-radius: 26px; background: center / cover no-repeat; box-shadow: 0 0 0 7px var(--ink), 0 0 0 13px var(--sun), 0 24px 60px rgba(0,0,0,.55); }
+.card.legend { box-shadow: 0 0 0 7px var(--ink), 0 0 0 13px #ffd34d, 0 0 60px 18px rgba(255, 211, 77, .55), 0 24px 60px rgba(0,0,0,.5); }
+.card .shine { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.55) 48%, transparent 60%); background-size: 300% 100%; }
+.face { position: absolute; width: 176px; height: 176px; border-radius: 50%; overflow: hidden; background-color: #fff3cf; box-shadow: 0 0 0 6px var(--ink), 0 10px 0 6px rgba(0,0,0,.35); }
+.face i { position: absolute; inset: 0; background-repeat: no-repeat; }
+.chip { position: absolute; padding: 14px 34px; border-radius: 999px; background: #fff7e6; color: var(--ink); font-weight: 900; font-size: 50px; box-shadow: 0 0 0 6px var(--ink), 0 10px 0 6px var(--ink); white-space: nowrap; }
+.phone { position: absolute; left: 190px; top: 330px; width: 700px; height: 1515px; border-radius: 96px; background: #111; box-shadow: 0 0 0 14px #1d1a2e, 0 0 0 20px #3a3556, 0 40px 90px rgba(0,0,0,.6); overflow: hidden; }
+.phone img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.phone .notch { position: absolute; left: 50%; top: 18px; width: 190px; height: 46px; margin-left: -95px; border-radius: 30px; background: #0a0a0a; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+#fx { position: absolute; inset: 0; }
+.rays { position: absolute; left: 50%; top: 50%; width: 2600px; height: 2600px; margin: -1300px 0 0 -1300px;
+  background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.10) 0deg 9deg, transparent 9deg 22.5deg); border-radius: 50%; }
+.share { position: absolute; width: 640px; height: 800px; border-radius: 40px; overflow: hidden; box-shadow: 0 0 0 10px var(--ink), 0 30px 80px rgba(0,0,0,.6); background: center / cover no-repeat url("share_card.png"); }
+.btn { position: absolute; padding: 26px 54px; border-radius: 999px; background: linear-gradient(135deg, #8de3a5, #5ad7ff); color: var(--ink); font-weight: 900; font-size: 54px; box-shadow: 0 0 0 7px var(--ink), 0 12px 0 7px var(--ink); white-space: nowrap; }
+.url { position: absolute; left: 50%; padding: 22px 44px; border-radius: 999px; background: var(--sun); color: var(--ink); font-weight: 900; font-size: 56px; box-shadow: 0 0 0 7px var(--ink), 0 12px 0 7px var(--ink); white-space: nowrap; }
+.tier { position: absolute; padding: 10px 26px; border-radius: 999px; font-weight: 900; font-size: 38px; color: var(--ink); box-shadow: 0 0 0 5px var(--ink), 0 8px 0 5px var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- 1. заставка -->
+  <div class="layer" id="L1">
+    <div class="bg" id="bg1" style="background-image:url('../art/bg_city.webp')"></div>
+    <div class="shade" style="background:linear-gradient(rgba(10,12,40,.55),rgba(10,12,40,.25) 40%,rgba(10,12,40,.8))"></div>
+    <div class="rays" id="rays1"></div>
+    <div class="card legend" id="c1a" style="background-image:url('../art/legend_QS.webp')"><div class="shine"></div></div>
+    <div class="card legend" id="c1b" style="background-image:url('../art/legend_KH.webp')"><div class="shine"></div></div>
+    <div class="t" id="logo" style="top:520px;font-size:380px;color:var(--sun);-webkit-text-stroke:26px var(--ink)">108</div>
+    <div class="t" id="h1a" style="top:1010px;font-size:96px">НАБЕРЁШЬ 108 —</div>
+    <div class="t" id="h1b" style="top:1130px;font-size:150px;color:var(--berry);-webkit-text-stroke:20px var(--ink)">ПРОИГРАЛ</div>
+    <div class="s" id="h1c" style="top:1360px">карточная игра из ташкентских дворов</div>
+  </div>
+  <!-- 2. герои -->
+  <div class="layer" id="L2">
+    <div class="bg" style="background:radial-gradient(circle at 50% 40%,#1f6b66,#0c2f35 70%)"></div>
+    <div class="rays" id="rays2" style="opacity:.6"></div>
+    <div class="t" id="h2a" style="top:150px;font-size:150px;color:var(--sun)">25 ГЕРОЕВ</div>
+    <div class="s" id="h2b" style="top:330px;font-size:56px">у каждого — свой характер</div>
+    <div id="faces"></div>
+  </div>
+  <!-- 3. геймплей -->
+  <div class="layer" id="L3">
+    <div class="bg" style="background-image:url('../art/bg_city.webp');filter:blur(10px) brightness(.55)"></div>
+    <div class="phone" id="phone"><img id="game" alt=""><div class="notch"></div></div>
+    <div class="t" id="cap" style="top:70px;font-size:92px"></div>
+  </div>
+  <!-- 4. легенды -->
+  <div class="layer" id="L4">
+    <div class="bg" style="background:radial-gradient(circle at 50% 45%,#5b2b8c,#1b0f33 72%)"></div>
+    <div class="rays" id="rays4"></div>
+    <div id="legends"></div>
+    <div class="t" id="h4a" style="top:150px;font-size:140px;color:var(--sun)">ЛЕГЕНДЫ</div>
+    <div class="s" id="h4b" style="top:320px;font-size:54px">карты с нашими героями выпадают случайно</div>
+    <div id="tiers"></div>
+    <div class="s" id="h4c" style="top:1700px;font-size:52px">116 карт в альбоме</div>
+  </div>
+  <!-- 5. места -->
+  <div class="layer" id="L5">
+    <div id="places"></div>
+    <div class="shade" style="background:linear-gradient(rgba(10,12,40,.7),transparent 30%,transparent 70%,rgba(10,12,40,.75))"></div>
+    <div class="t" id="h5a" style="top:150px;font-size:150px;color:var(--sun)">6 МЕСТ</div>
+    <div class="s" id="h5b" style="top:330px;font-size:54px">от чайханы до крыши U Tower</div>
+    <div class="chip" id="placeChip" style="left:50%;top:1600px;font-size:72px;padding:18px 48px">Чайхана</div>
+  </div>
+  <!-- 6. партия дня -->
+  <div class="layer" id="L6">
+    <div class="bg" style="background-image:url('../art/bg_yurt.webp');filter:brightness(.45)"></div>
+    <div class="t" id="h6a" style="top:110px;font-size:130px;color:var(--sun)">ПАРТИЯ ДНЯ</div>
+    <div class="s" id="h6b" style="top:270px;font-size:52px">одна раздача для всех — у кого меньше очков?</div>
+    <div class="share" id="share"></div>
+    <div class="btn" id="shareBtn">📤 Поделиться</div>
+  </div>
+  <!-- 7. финал -->
+  <div class="layer" id="L7">
+    <div class="bg" id="bg7" style="background-image:url('../art/bg_city.webp')"></div>
+    <div class="shade" style="background:linear-gradient(rgba(10,12,40,.5),rgba(10,12,40,.3) 45%,rgba(10,12,40,.85))"></div>
+    <div class="rays" id="rays7" style="opacity:.55"></div>
+    <img id="icon7" src="../art/icon-512.png" alt="" style="position:absolute;left:50%;top:170px;width:300px;height:300px;margin-left:-150px;border-radius:66px;box-shadow:0 0 0 8px var(--ink),0 24px 60px rgba(0,0,0,.5)">
+    <div class="t" id="h7a" style="top:520px;font-size:124px">ИГРАЙ<br>С ДРУЗЬЯМИ</div>
+    <div class="s" id="h7b" style="top:800px;font-size:54px;color:var(--mint)">бесплатно · без регистрации</div>
+    <div class="url" id="url7" style="top:910px">game-108.onrender.com</div>
+    <div id="crowd"></div>
+  </div>
+  <canvas id="fx" width="1080" height="1920"></canvas>
+  <div id="flash"></div>
+</div>
+<script>
+// ===================== таймлайн ролика (секунды, 120 BPM: доля = 0,5 с) =====================
+const SEG = { s1: [0, 3], s2: [3, 5.5], s3: [5.5, 16.5], s4: [16.5, 20], s5: [20, 23], s6: [23, 26.5], s7: [26.5, 30] };
+const DURATION = 30;
+// куски геймплея: [начало в ролике, конец в ролике, игровое время начала, скорость]
+const GAME_CUTS = [[5.5, 7.5, 0.25, 1.4], [7.5, 12.5, 3.12, 1.65], [12.5, 14.0, 14.5, 1.0], [14.0, 16.5, 19.5, 1.0]];
+const CAPS = [[5.5, 'Тебе пришли <span style="color:#ffd34d">ЛЕГЕНДЫ</span>'], [7.5, 'Семёрка? <span style="color:#ff6b6b">Бери 2…</span>'],
+  [10.5, 'Цепочка — <span style="color:#ff6b6b">БЕРИ 8!</span>'], [12.5, 'Туз — <span style="color:#5ad7ff">пропусти ход</span>'], [14.0, 'Пиковая дама: <span style="color:#8de3a5">−40!</span>']];
+const PLACES = [['bg', 'Чайхана'], ['bg_train', 'Поезд'], ['bg_yard', 'Махалля'], ['bg_roof', 'Крыша'], ['bg_yurt', 'Юрта'], ['bg_city', 'U Tower']];
+const HEROES = ['m01','m02','m03','m04','m05','m06','m07','m08','m09','m10','m11','m12','m13','m14','m15','f01','f02','f03','f04','f05','f06','f07','f08','f09','f10'];
+const LEGENDS = ['QS', 'KH', 'AS', 'JD', 'QH', 'KS', 'AH', 'JC'];
+const TIERS = [['Серебро', 'linear-gradient(135deg,#fbfcff,#c9d1df)'], ['Золото', 'linear-gradient(135deg,#fff3c4,#f0bd45)'], ['Голограмма', 'linear-gradient(135deg,#ffb3ec,#9fe9ff,#fff59c)'], ['Легенда', 'linear-gradient(135deg,#ffd34d,#ff8a5b)']];
+
+const $ = id => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const easeIn = x => x * x * x;
+const easeInOut = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const back = x => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const elastic = x => x === 0 || x === 1 ? x : Math.pow(2, -10 * x) * Math.sin((x * 10 - .75) * (2 * Math.PI / 3)) + 1;
+const lerp = (a, b, x) => a + (b - a) * x;
+function rng(seed) { let s = seed | 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+// слой виден внутри своего отрезка, с короткой склейкой
+function layerAlpha(t, [a, b], fadeIn = .12, fadeOut = .12) { if (t < a - 1e-6 || t >= b + fadeOut) return 0; return Math.min(prog(t, a, a + fadeIn), 1 - prog(t, b, b + fadeOut)); }
+// «появление с отскоком»: масштаб и прозрачность
+function pop(el, t, at, dur = .45, from = .3, pre = '') { const p = prog(t, at, at + dur); el.style.opacity = p > 0 ? Math.min(1, p * 3) : 0; el.style.transform = `${pre} scale(${lerp(from, 1, back(p))})`; }
+
+let META = {}, GAME = { frames: [] };
+const faceEls = [], legendEls = [], tierEls = [], placeEls = [], crowdEls = [];
+async function init() {
+  META = await (await fetch('../sprites/meta.json')).json();
+  GAME = await (await fetch('frames_game/index.json')).json();
+  // стена героев 5×5
+  const fw = 176, gap = 30, x0 = (1080 - (5 * fw + 4 * gap)) / 2, y0 = 470;
+  HEROES.forEach((id, i) => {
+    const d = document.createElement('div'); d.className = 'face';
+    d.style.left = (x0 + (i % 5) * (fw + gap)) + 'px'; d.style.top = (y0 + Math.floor(i / 5) * (fw + gap + 34)) + 'px';
+    d.innerHTML = `<i style="background-image:url('../sprites/${id}.webp')"></i>`;
+    $('faces').appendChild(d); faceEls.push([d, id]);
+  });
+  LEGENDS.forEach((id, i) => { const c = document.createElement('div'); c.className = 'card legend'; c.style.backgroundImage = `url('../art/legend_${id}.webp')`; c.innerHTML = '<div class="shine"></div>'; $('legends').appendChild(c); legendEls.push(c); });
+  TIERS.forEach(([n, bg]) => { const c = document.createElement('div'); c.className = 'tier'; c.textContent = n; c.style.background = bg; $('tiers').appendChild(c); tierEls.push(c); });
+  PLACES.forEach(([f]) => { const d = document.createElement('div'); d.className = 'bg'; d.style.backgroundImage = `url('../art/${f}.webp')`; d.style.opacity = 0; $('places').appendChild(d); placeEls.push(d); });
+  ['m14', 'f07', 'm10', 'f09', 'm08', 'm13', 'f10'].forEach(id => { const d = document.createElement('div'); d.style.cssText = `position:absolute;height:330px;background:url('../sprites/${id}.webp') no-repeat`; $('crowd').appendChild(d); crowdEls.push([d, id]); });
+  await document.fonts.ready;
+  // заранее грузим картинки
+  const srcs = [...document.querySelectorAll('[style*="url("]')].map(e => (e.style.backgroundImage.match(/url\("?([^")]+)"?\)/) || [])[1]).filter(Boolean);
+  await Promise.all([...new Set(srcs)].map(s => new Promise(r => { const im = new Image(); im.onload = im.onerror = r; im.src = s; })));
+}
+// клетка эмоции героя в круглой рамке (лицо крупно)
+function setFace(el, id, cell, size) {
+  const m = META[id]; const h = size * 1.32, w = m.w * h / m.h;
+  el.style.backgroundSize = `${w * 8}px ${h}px`;
+  el.style.backgroundPosition = `${-cell * w + (size - w) / 2}px ${-size * .05}px`;
+}
+function gameFrameAt(gt) {
+  const f = GAME.frames; let lo = 0, hi = f.length - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (f[mid][0] <= gt) lo = mid; else hi = mid - 1; }
+  return 'frames_game/' + f[lo][1];
+}
+const fx = () => $('fx').getContext('2d');
+function confetti(ctx, t, t0, n, seed, gravity = 900) {
+  const r = rng(seed), cols = ['#ffc93c', '#ff6b6b', '#5ad7ff', '#8de3a5', '#ffffff', '#c66ff0'];
+  for (let i = 0; i < n; i++) {
+    const delay = r() * .5, x0 = r() * 1080, vx = (r() - .5) * 500, vy = -200 - r() * 900, rot = r() * 6, vr = (r() - .5) * 14, w = 14 + r() * 14, h = 20 + r() * 16, c = cols[i % cols.length];
+    const dt = t - t0 - delay; if (dt < 0) continue;
+    const x = x0 + vx * dt, y = 1920 * .55 + vy * dt + gravity * dt * dt;
+    if (y > 2000) continue;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot + vr * dt); ctx.fillStyle = c; ctx.strokeStyle = '#1d1a2e'; ctx.lineWidth = 3;
+    ctx.fillRect(-w / 2, -h / 2, w, h); ctx.strokeRect(-w / 2, -h / 2, w, h); ctx.restore();
+  }
+}
+function sparkles(ctx, t, t0, cx, cy, n, seed, spread = 520) {
+  const r = rng(seed);
+  for (let i = 0; i < n; i++) {
+    const a = r() * Math.PI * 2, sp = spread * (.5 + r() * .7), life = .5 + r() * .35, dt = t - t0;
+    if (dt < 0 || dt > life) continue;
+    const p = dt / life, d = sp * easeOut(p), x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d, s = (1 - p) * (10 + r() * 14);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(p * 3); ctx.fillStyle = i % 3 ? '#ffd34d' : '#ffffff'; ctx.globalAlpha = 1 - p;
+    ctx.beginPath(); for (let k = 0; k < 8; k++) { const rr = k % 2 ? s * .35 : s; ctx.lineTo(Math.cos(k * Math.PI / 4) * rr, Math.sin(k * Math.PI / 4) * rr); } ctx.fill(); ctx.restore();
+  }
+}
+// ===================== кадр в момент t =====================
+async function renderAt(t) {
+  const ctx = fx(); ctx.clearRect(0, 0, 1080, 1920);
+  // вспышки на склейках
+  const cuts = [3, 5.5, 16.5, 20, 23, 26.5]; let fl = 0;
+  cuts.forEach(c => { if (t >= c && t < c + .18) fl = Math.max(fl, .55 * (1 - (t - c) / .18)); });
+  $('flash').style.opacity = fl;
+  // ---- 1. заставка
+  $('L1').style.opacity = layerAlpha(t, SEG.s1, 0.001);
+  if (t < SEG.s1[1] + .2) {
+    $('bg1').style.transform = `scale(${lerp(1.18, 1.04, easeOut(prog(t, 0, 3)))})`;
+    $('rays1').style.transform = `rotate(${t * 12}deg)`; $('rays1').style.opacity = .35 * prog(t, .2, .6);
+    const pl = prog(t, .12, .55); $('logo').style.opacity = pl > 0 ? 1 : 0;
+    const shake = t > .5 && t < .85 ? Math.sin(t * 90) * 14 * (1 - prog(t, .5, .85)) : 0;
+    $('logo').style.transform = `translate(${shake}px, ${shake * .6}px) scale(${lerp(3.2, 1, back(pl))}) rotate(${lerp(-14, -4, easeOut(pl))}deg)`;
+    pop($('h1a'), t, .95, .4, .5);
+    const ps = prog(t, 1.45, 1.75); $('h1b').style.opacity = ps > 0 ? 1 : 0; $('h1b').style.transform = `scale(${lerp(2.4, 1, easeOut(ps))}) rotate(${lerp(8, -3, ps)}deg)`;
+    pop($('h1c'), t, 2.0, .4, .7);
+    [[$('c1a'), -1], [$('c1b'), 1]].forEach(([c, s]) => {
+      const p = easeOut(prog(t, .35 + (s > 0 ? .1 : 0), 1.0 + (s > 0 ? .1 : 0)));
+      c.style.left = (540 - 150 + s * lerp(900, 330, p)) + 'px'; c.style.top = lerp(1500, 120, p) + 'px';
+      c.style.transform = `rotate(${s * lerp(60, 16, p) + Math.sin(t * 2 + s) * 3}deg) scale(.82)`;
+      c.querySelector('.shine').style.backgroundPosition = `${lerp(120, -120, (t * .6) % 1)}% 0`;
+    });
+    sparkles(ctx, t, .5, 540, 760, 46, 7, 640);
+  }
+  // ---- 2. герои
+  $('L2').style.opacity = layerAlpha(t, SEG.s2);
+  if (t >= SEG.s2[0] - .1 && t < SEG.s2[1] + .2) {
+    const a = SEG.s2[0];
+    pop($('h2a'), t, a + .05, .4, .4); pop($('h2b'), t, a + .3, .35, .6);
+    $('rays2').style.transform = `rotate(${t * 10}deg)`;
+    faceEls.forEach(([el, id], i) => {
+      const at = a + .15 + i * .045; pop(el, t, at, .4, .2);
+      const cell = Math.floor((t - at) / .32 + i * 3) % 8; setFace(el.firstChild, id, Math.max(0, cell), 176);
+    });
+  }
+  // ---- 3. геймплей в телефоне
+  $('L3').style.opacity = layerAlpha(t, SEG.s3);
+  if (t >= SEG.s3[0] - .05 && t < SEG.s3[1] + .2) {
+    const cut = GAME_CUTS.find(c => t >= c[0] && t < c[1]) || GAME_CUTS[GAME_CUTS.length - 1];
+    const gt = cut[2] + (Math.min(t, cut[1]) - cut[0]) * cut[3];
+    const img = $('game'), src = gameFrameAt(gt);
+    if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; await img.decode().catch(() => {}); }
+    const pin = prog(t, SEG.s3[0], SEG.s3[0] + .5);
+    const punch = GAME_CUTS.reduce((m, c) => (t >= c[0] && t < c[0] + .2 ? Math.max(m, 1 - (t - c[0]) / .2) : m), 0);
+    $('phone').style.transform = `translateY(${lerp(500, 0, easeOut(pin))}px) scale(${1 + punch * .025}) rotate(${Math.sin(t * .9) * .8}deg)`;
+    const capNow = CAPS.filter(c => t >= c[0]).pop() || CAPS[0];
+    if ($('cap').dataset.k !== String(capNow[0])) { $('cap').dataset.k = String(capNow[0]); $('cap').innerHTML = capNow[1]; }
+    pop($('cap'), t, capNow[0], .35, .5);
+  }
+  // ---- 4. легенды
+  $('L4').style.opacity = layerAlpha(t, SEG.s4);
+  if (t >= SEG.s4[0] - .1 && t < SEG.s4[1] + .2) {
+    const a = SEG.s4[0];
+    $('rays4').style.transform = `rotate(${-t * 14}deg)`;
+    pop($('h4a'), t, a + .05, .4, .4); pop($('h4b'), t, a + .3, .35, .7);
+    legendEls.forEach((c, i) => {
+      const p = easeOut(prog(t, a + .2 + i * .09, a + .75 + i * .09));
+      const ang = (i - 3.5) * 9, R = 1300;
+      const cx = 540 + Math.sin(ang * Math.PI / 180) * R * .62 - 150, cy = 1660 - Math.cos(ang * Math.PI / 180) * R * .62 - 212;
+      c.style.left = lerp(390, cx, p) + 'px'; c.style.top = lerp(2100, cy, p) + 'px';
+      c.style.transform = `rotate(${lerp(0, ang, p)}deg) scale(.86)`; c.style.zIndex = i;
+      c.querySelector('.shine').style.backgroundPosition = `${lerp(140, -140, ((t - a) * .7 + i * .12) % 1)}% 0`;
+    });
+    tierEls.forEach((c, i) => { const x = [118, 352, 584, 870][i]; c.style.left = (x - 110) + 'px'; c.style.top = '1580px'; pop(c, t, a + 1.2 + i * .12, .35, .4); });
+    pop($('h4c'), t, a + 1.8, .35, .6);
+    sparkles(ctx, t, a + 1.0, 540, 900, 40, 21, 700);
+  }
+  // ---- 5. места
+  $('L5').style.opacity = layerAlpha(t, SEG.s5);
+  if (t >= SEG.s5[0] - .1 && t < SEG.s5[1] + .2) {
+    const a = SEG.s5[0], k = clamp(Math.floor((t - a) / .5), 0, 5);
+    placeEls.forEach((d, i) => { d.style.opacity = i === k ? 1 : 0; if (i === k) d.style.transform = `scale(${lerp(1.16, 1.04, easeOut(prog(t, a + i * .5, a + i * .5 + .5)))})`; });
+    pop($('h5a'), t, a + .05, .4, .4); pop($('h5b'), t, a + .25, .35, .7);
+    const chip = $('placeChip'); if (chip.dataset.k !== String(k)) { chip.dataset.k = String(k); chip.textContent = PLACES[k][1]; }
+    pop(chip, t, a + k * .5, .3, .5, 'translateX(-50%)');
+  }
+  // ---- 6. партия дня
+  $('L6').style.opacity = layerAlpha(t, SEG.s6);
+  if (t >= SEG.s6[0] - .1 && t < SEG.s6[1] + .2) {
+    const a = SEG.s6[0];
+    pop($('h6a'), t, a + .05, .4, .4); pop($('h6b'), t, a + .3, .35, .7);
+    const p = back(prog(t, a + .2, a + .8));
+    const sh = $('share'); sh.style.left = '220px'; sh.style.top = lerp(1950, 420, p) + 'px'; sh.style.transform = `rotate(${lerp(14, -3, clamp(p)) + Math.sin(t * 1.4) * 1.2}deg)`;
+    const b = $('shareBtn'); b.style.left = '50%'; b.style.top = '1340px';
+    const press = t > a + 1.9 && t < a + 2.1 ? .9 : 1;
+    pop(b, t, a + 1.0, .4, .3, 'translateX(-50%)'); b.style.transform += ` scale(${press})`;
+    if (t >= a + 2.0) confetti(ctx, t, a + 2.0, 90, 31, 1100);
+  }
+  // ---- 7. финал
+  $('L7').style.opacity = layerAlpha(t, SEG.s7, .12, .001);
+  if (t >= SEG.s7[0] - .1) {
+    const a = SEG.s7[0];
+    $('bg7').style.transform = `scale(${lerp(1.05, 1.15, prog(t, a, 30))})`;
+    $('rays7').style.transform = `rotate(${t * 10}deg)`;
+    pop($('icon7'), t, a + .05, .5, .2);
+    pop($('h7a'), t, a + .35, .4, .5); pop($('h7b'), t, a + .6, .35, .7);
+    const u = $('url7'); pop(u, t, a + .85, .45, .3, 'translateX(-50%)');
+    crowdEls.forEach(([d, id], i) => {
+      const m = META[id], h = 330, w = m.w * h / m.h; d.style.width = w + 'px'; d.style.backgroundSize = `${w * 8}px ${h}px`;
+      d.style.backgroundPosition = `${-[1, 1, 5, 5, 1, 1, 5][i] * w}px 0`;
+      const p = back(prog(t, a + .4 + i * .08, a + .9 + i * .08));
+      d.style.left = (540 - w / 2 + (i - 3) * 150) + 'px'; d.style.top = lerp(1950, 1590 - (i % 2) * 40, p) + 'px';
+      d.style.transform = `translateY(${Math.sin((t - a) * 7 + i) * 10}px)`; d.style.zIndex = 10 - Math.abs(i - 3);
+    });
+    if (t >= a + .9) confetti(ctx, t, a + .9, 120, 77, 700);
+  }
+}
+window.renderAt = renderAt;
+window.ready = init();
+</script>
+</body>
+</html>

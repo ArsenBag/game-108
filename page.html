@@ -1590,7 +1590,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     // модальные окна по фазе
     if (G.phase === 'chooseSuit' && G.current === me) showSuitModal();
     else if (G.phase === 'counterOffer' && G.current === me) showCounterModal();
-    else if (G.phase === 'roundEnd') setTimeout(showRoundModal, 500);
+    else if (G.phase === 'roundEnd') { if (!window.__promoNoModal) setTimeout(showRoundModal, 500); }
     else if (G.phase === 'gameOver') setTimeout(showGameOverModal, 500);
     else if (document.querySelector('.modal-bg[data-auto]')) closeModal();
   }
@@ -2089,10 +2089,18 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       avatarSeeds = data.avatarSeeds || G.players.map((p, i) => i * 7 % 24);
       if (SP) SP.preload(avatarSeeds, () => render());
       SFX.preload();
+      applyScene(true);
       if (G.phase === 'roundEnd' || G.phase === 'gameOver') reactToRoundEnd();
       
       render(); scheduleBots();
     } else showStart();
+  }
+  // режим съёмки рекламного ролика (?promo=1): сценарий ходит за всех игроков
+  if (/[?&]promo=1(&|$)/.test(location.search)) {
+    window.__promoNoModal = true;
+    window.__promo = { E, act, render, animateDeal, closeModal, get G() { return G; },
+      play: id => act(() => E.playCard(G, id)),
+      draw: () => act(() => { E.draw(G); if (G.phase === 'counterOffer') E.declineCounter(G); }) };
   }
   if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
     window.claude.hot.snapshot(() => ({ G, me, myName, avatarSeeds }));

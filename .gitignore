@@ -2,3 +2,7 @@ node_modules/
 .DS_Store
 *.log
 108-project.zip
+promo/frames_game/
+promo/frames_video/
+promo/*.mp4
+promo/*.wav
