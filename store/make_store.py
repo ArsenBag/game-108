@@ -53,7 +53,7 @@ def card(path, w=150):
     out = Image.new('RGBA', (w + 14, h + 14), (0, 0, 0, 0)); bd = ImageDraw.Draw(out)
     bd.rounded_rectangle([0, 0, w + 13, h + 13], radius=22, fill='#1d1a2e'); bd.rounded_rectangle([3, 3, w + 10, h + 10], radius=19, fill='#ffd34d')
     out.alpha_composite(c, (7, 7)); return out
-for path, ang, pos in (('art/legend_AS.webp', 13, (835, 70)), ('art/legend_KH.webp', -2, (735, 50)), ('art/legend_QS.webp', -15, (630, 80))):
+for path, ang, pos in (('art/legend_AS.webp', 13, (850, 70)), ('art/legend_KH.webp', -2, (752, 50)), ('art/legend_QS.webp', -15, (650, 80))):
     c = card(path).rotate(ang, expand=True, resample=Image.BICUBIC)
     sh = Image.new('RGBA', c.size, (0, 0, 0, 0)); sh.putalpha(c.getchannel('A').point(lambda v: int(v * .5))); sh = sh.filter(ImageFilter.GaussianBlur(8))
     fg.alpha_composite(sh, (pos[0] + 8, pos[1] + 12)); fg.alpha_composite(c, pos)
@@ -64,8 +64,8 @@ for hid, cell in (('m14', 1), ('f07', 1), ('m10', 5), ('f09', 5), ('m08', 1)):
     fg.alpha_composite(c, (x, H - hh - 2)); x += c.width - 16
 d = ImageDraw.Draw(fg)
 draw(d, (52, 52), '108', 170, '#ffc93c', 11)
-draw(d, (58, 262), 'карточная игра', 46, '#ffffff', 6)
-draw(d, (58, 318), 'из ташкентских дворов', 46, '#ffffff', 6)
+draw(d, (58, 262), 'карточная игра', 44, '#ffffff', 6)
+draw(d, (58, 316), 'из ташкентских дворов', 44, '#ffffff', 6)
 draw(d, (58, 400), '25 героев · легенды · онлайн', 32, '#ffe9a8', 5)
 fg.convert('RGB').save(OUT + '/feature-graphic.png')
 

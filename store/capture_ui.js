@@ -29,6 +29,8 @@ const PROF = { xp: 1340, games: 23, wins: 14, rounds: 168, closes: 41, rares: 37
   await p.click('[data-act=online]'); await p.waitForTimeout(500);
   await p.click('[data-act=create]'); await p.waitForTimeout(1500);
   for (let i = 0; i < 3; i++) { await p.click('[data-act=bot]'); await p.waitForTimeout(300); }
+  // на сайте ссылка ведёт на сервер игры — показываем её, а не локальный адрес съёмки
+  await p.evaluate(() => { const i = document.querySelector('#linkInput'); if (i) i.value = i.value.replace(/^https?:\/\/[^/]+\//, 'https://game-108.onrender.com/'); });
   await p.waitForTimeout(800); await p.screenshot({ path: OUT + '/lobby.png' });
   console.log('ok', fs.readdirSync(OUT));
   await b.close();

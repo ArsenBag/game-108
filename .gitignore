@@ -12,3 +12,4 @@ android-keys/
 *.jks
 *.keystore
 store/build/
+store/raw/
