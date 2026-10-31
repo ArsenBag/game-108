@@ -943,6 +943,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   let coachBusy = false, coachTimer = null;
   function coach(key, text, now) {
     if (!settings.coach) return;
+    if (!text && !(key && COACH[key])) return;                     // для обычных карт подсказки нет
     if (key) { if (prof.coach[key]) return; prof.coach[key] = 1; saveProf(); }
     const item = { text: text || COACH[key], over: key === 'round' || !!now };   // over — можно показывать поверх окна
     if (now) { coachQ.unshift(item); clearTimeout(coachTimer); nextCoach(); return; }   // ответ на действие игрока — сразу, без очереди
@@ -959,11 +960,12 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       clearTimeout(coachTimer); coachTimer = setTimeout(nextCoach, 1200); return;
     }
     const text = item.text;
+    if (!text) { setTimeout(nextCoach, 0); return; }
     if (!el) {
       el = document.createElement('div'); el.id = 'coach'; el.setAttribute('role', 'status');
       document.body.appendChild(el);
       el.addEventListener('click', e => {
-        if (e.target.closest('[data-coach=off]')) { settings.coach = false; saveSettings(); coachQ.length = 0; }
+        if (e.target.closest('[data-coach=off]')) { e.preventDefault(); settings.coach = false; saveSettings(); coachQ.length = 0; }
         clearTimeout(coachTimer); el.classList.remove('show'); setTimeout(nextCoach, 250);
       });
     }
@@ -1163,16 +1165,27 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
   }
 
   // ---------- окна: профиль и альбом ----------
+  // в главное меню; из онлайн-комнаты — после подтверждения в самой игре (системные confirm() в приложении ненадёжны)
+  function goHome() {
+    if (!NET.online) { showStart(); return; }
+    const bg = modal(`<h2>Выйти из комнаты?</h2><p>Вы покинете онлайн-игру. Ваше место займёт бот, вернуться можно по той же ссылке.</p>
+      <div class="row"><button class="btn" data-act="close">Остаться</button><button class="btn primary" data-act="leave">Выйти</button></div>`);
+    bg.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
+    bg.querySelector('[data-act=leave]').onclick = () => { NET.leave(); showStart(); };
+  }
+  const gameInProgress = () => !!(G && !NET.online && G.phase !== 'gameOver');
   function showMenuModal() {
     const bg = modal(`<h2>Меню</h2><div class="menu-grid">
       <button class="btn" data-m="score">Счёт</button><button class="btn" data-m="log">Журнал</button>
       <button class="btn" data-m="rules">Правила</button><button class="btn" data-m="lore">История</button>
       <button class="btn" data-m="profile">🎖 Профиль</button><button class="btn" data-m="album">🃏 Альбом</button>
       <button class="btn" data-m="sound">${settings.sound ? '🔇 Выключить звук' : '🔊 Включить звук'}</button>${CAN_VIBRATE ? `<button class="btn" data-m="vibro">${settings.vibro ? '📳 Без вибрации' : '📳 С вибрацией'}</button>` : ''}
-      <button class="btn primary" data-m="new" style="grid-column:1 / -1">Новая игра</button>
-    </div><div class="row"><button class="btn" data-act="close">Вернуться к игре</button></div>`);
-    const go = { score: () => G ? showScoreModal() : closeModal(), log: () => G ? showLogModal() : closeModal(), rules: () => showRulesModal(), lore: () => showLoreModal(),
-      profile: () => showProfileModal(), album: () => showAlbumModal(), sound: () => { $('btnSound').click(); showMenuModal(); }, vibro: () => { settings.vibro = !settings.vibro; saveSettings(); buzz(40); showMenuModal(); }, new: () => { closeModal(); $('btnNew').click(); } };
+      <button class="btn primary" data-m="new" style="grid-column:1 / -1">${NET.online ? '🚪 Выйти из комнаты' : '🏠 Главное меню'}</button>
+      ${IS_APP ? '<button class="btn" data-m="exit" style="grid-column:1 / -1">Закрыть приложение</button>' : ''}
+    </div><div class="row"><button class="btn primary" data-act="close">${G ? 'Вернуться к игре' : 'Закрыть'}</button></div>`);
+    const back = () => showMenuModal();
+    const go = { score: () => G ? showScoreModal(back) : back(), log: () => G ? showLogModal(back) : back(), rules: () => showRulesModal(back), lore: () => showLoreModal(back),
+      profile: () => showProfileModal(back), album: () => showAlbumModal(back), exit: () => CAP.App && CAP.App.exitApp(), sound: () => { $('btnSound').click(); showMenuModal(); }, vibro: () => { settings.vibro = !settings.vibro; saveSettings(); buzz(40); showMenuModal(); }, new: () => goHome() };
     bg.querySelectorAll('[data-m]').forEach(b => b.onclick = () => go[b.dataset.m]());
     bg.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
   }
@@ -1474,7 +1487,8 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       const isAttack = c.rank === '6' || c.rank === '7' || (c.rank === 'K' && c.suit === 'H');
       SFX.play('play'); if (c.rank === 'Q') SFX.play('queen'); else if (isAttack) SFX.play('penalty');
       trackPlay(b, c, actor);
-      if (actor !== me || G.current !== me) coach(c.rank === 'K' && c.suit === 'H' ? 'cK' : ({ '6': 'c6', '7': 'c7', A: 'cA', Q: 'cQ', '8': 'c8' })[c.rank]);
+      const ck = c.rank === 'K' && c.suit === 'H' ? 'cK' : ({ '6': 'c6', '7': 'c7', A: 'cA', Q: 'cQ', '8': 'c8' })[c.rank];
+      if (ck && (actor !== me || G.current !== me)) coach(ck);
       if (isAttack && G.pending) {
         const cnt = G.pending.count || 1;
         if (cnt >= 2) { burst(`ЦЕПОЧКА ×${cnt}`, 'chain', `бери ${G.pending.draws}!`); if (cnt >= 3) shake(1); }
@@ -1842,7 +1856,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     const b = snap();
     lastActionAt = Date.now();
     fn();
-    closeModal();
+    closeAutoModal();
     render();
     if (G.round === b.round) reactToDiff(b);
     saveGame();
@@ -1864,20 +1878,25 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     bg.className = 'modal-bg'; if (auto) bg.dataset.auto = '1';
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`;
     $('modals').appendChild(bg);
-    const f = bg.querySelector('input') || bg.querySelector('.btn.primary') || bg.querySelector('button'); if (f) f.focus({ preventScroll: true });
+    const touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    const f = (!touch && bg.querySelector('input')) || bg.querySelector('.btn.primary') || bg.querySelector('button'); if (f) f.focus({ preventScroll: true });
+    // тап по затемнению закрывает окно, если у него есть кнопка «закрыть»
+    bg.addEventListener('click', e => { if (e.target !== bg) return; const c = bg.querySelector('[data-act=close], [data-act=resume]'); if (c) c.click(); });
     return bg;
   }
   function closeModal() { $('modals').innerHTML = ''; }
+  function closeAutoModal() { if (document.querySelector('.modal-bg[data-auto]')) closeModal(); }
+  const userModalOpen = () => !!document.querySelector('.modal-bg:not([data-auto])');
 
   function showSuitModal() {
-    if (document.querySelector('.modal-bg[data-kind="suit"]')) return;
+    if (document.querySelector('.modal-bg[data-kind="suit"]') || userModalOpen()) return;
     const bg = modal(`<h2>Какую масть заказываете?</h2><div class="suits">${E.SUITS.map(s =>
       `<button class="suit-btn ${s === 'H' || s === 'D' ? 'red' : ''}" data-suit="${s}">${E.SUIT_SYM[s]}<small>${E.SUIT_RU[s]}</small></button>`).join('')}</div>`, true);
     bg.dataset.kind = 'suit';
     bg.querySelectorAll('[data-suit]').forEach(b => b.onclick = () => doAct('suit', b.dataset.suit));
   }
   function showCounterModal() {
-    if (document.querySelector('.modal-bg[data-kind="offer"]')) return;
+    if (document.querySelector('.modal-bg[data-kind="offer"]') || userModalOpen()) return;
     const c = G.players[me].hand.find(x => x.id === G.offerCard);
     const bg = modal(`<h2>Первой картой пришла ${E.cardName(c)}!</h2>
       <div class="offer">${cardHTML(c, '', 'tabindex="-1"')}<p>Можно отбиться ею — штраф уйдёт дальше, а брать ничего не нужно. Или взять все ${G.pending.draws} ${E.plural(G.pending.draws)}.</p></div>
@@ -1897,7 +1916,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     }).join('');
   }
   function showRoundModal() {
-    if (!G || G.phase !== 'roundEnd' || document.querySelector('.modal-bg[data-kind="round"]')) return;
+    if (!G || G.phase !== 'roundEnd' || document.querySelector('.modal-bg')) return;   // открыто другое окно — не перебиваем
     const fin = G.players[G.lastRound.finisher];
     const gone = (G.eliminatedNow || []).map(id => G.players[id].name);
     const bg = modal(`<h2>Партия ${G.round} закончена — закрыл ${esc(fin.name)}</h2>
@@ -1910,7 +1929,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     bg.querySelector('[data-act=next]').onclick = () => { if (NET.online) { closeModal(); NET.send({ t: 'next' }); return; } closeModal(); E.startRound(G); lastHandIds = new Set(); saveGame(); SFX.play('shuffle'); animateDeal().then(scheduleBots); };
   }
   function showGameOverModal() {
-    if (!G || G.phase !== 'gameOver' || document.querySelector('.modal-bg[data-kind="over"]')) return;
+    if (!G || G.phase !== 'gameOver' || document.querySelector('.modal-bg')) return;
     if (G.mode === 'elim' && G.winner != null) {
       const w = G.players[G.winner], iWon = G.winner === me;
       const order = G.eliminated.map((id, k) => `<li><b>${esc(G.players[id].name)}</b> — партия ${G.players[id].outRound}, ${ptsW(G.players[id].score)}</li>`).join('');
@@ -1937,7 +1956,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     bg.querySelector('[data-act=new]').onclick = () => { if (NET.online) { NET.send({ t: 'newGame' }); closeModal(); } else showStart(); };
     bg.querySelector('[data-act=hist]').onclick = showScoreModal;
   }
-  function showScoreModal() {
+  function showScoreModal(back) {
     const n = G.players.length;
     const rows = G.history.map(h => `<tr><td>${h.round}</td>${h.results.map(r =>
       `<td class="num ${r.pts < 0 ? 'neg' : (r.pts > 0 ? 'pos' : '')}">${r.pts > 0 ? '+' : ''}${r.pts}${r.reset ? '<span class="badge">0</span>' : ''}</td>`).join('')}</tr>`).join('');
@@ -1947,13 +1966,13 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
       <tr><td><b>Итого</b></td>${G.players.map(p => `<td class="num"><b>${p.score}</b></td>`).join('')}</tr></tbody></table>
       <p class="note" style="color:#6b6878;font-size:12px;margin-top:10px">Проигрывает тот, кто набирает 108. Ровно 107 — счёт обнуляется.</p>
       <div class="row"><button class="btn primary" data-act="close">Закрыть</button></div>`);
-    document.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
+    document.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
   }
-  function showLogModal() {
+  function showLogModal(back) {
     const rows = G.log.slice().reverse().map(l => `<li class="k-${l.k}">${esc(l.t)}</li>`).join('');
     modal(`<h2>Журнал партии ${G.round}</h2><ul class="logl">${rows || '<li class="k-info">Пока пусто</li>'}</ul>
       <div class="row"><button class="btn primary" data-act="close">Закрыть</button></div>`);
-    document.querySelector('[data-act=close]').onclick = () => { closeModal(); render(); };
+    document.querySelector('[data-act=close]').onclick = back || (() => { closeModal(); render(); });
   }
   function showLoreModal(back, tab) {
     tab = tab || 'hist';
@@ -2041,7 +2060,9 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
         <div class="field"><label>Колода</label><div class="decks" id="decks"><button class="deck-btn rnd ${settings.deck === 'random' ? 'on' : ''}" data-deck="random"><span>Случайно</span></button>${DECKS.map(([k, t, img]) => `<button class="deck-btn ${settings.deck === k ? 'on' : ''}" data-deck="${k}" style="background-image:url('${img}')"><span>${t}</span></button>`).join('')}</div></div>
       </div>
       <div class="field"><label>Место</label><div class="scenes" id="scenes"><button class="scene-btn rnd ${settings.bg === 'random' ? 'on' : ''}" data-bg="random"><span>Случайно</span></button>${SCENES.map(([k, t, , th]) => `<button class="scene-btn ${settings.bg === k ? 'on' : ''}" data-bg="${k}" style="background-image:url('${th}')"><span>${t}</span></button>`).join('')}</div></div>
-      <div class="row"><button class="btn" data-act="rules">Правила</button>${NET.available ? '<button class="btn" data-act="online">🌐 С друзьями</button>' : ''}<button class="btn primary" data-act="start">Сдать карты</button></div>`);
+      <div class="row">${gameInProgress() ? '<button class="btn" data-act="resume">↩ К текущей игре</button>' : ''}<button class="btn" data-act="rules">Правила</button>${NET.available ? '<button class="btn" data-act="online">🌐 С друзьями</button>' : ''}<button class="btn primary" data-act="start">${gameInProgress() ? 'Новая игра' : 'Сдать карты'}</button></div>`);
+    bg.dataset.kind = 'start';
+    const rs = bg.querySelector('[data-act=resume]'); if (rs) rs.onclick = () => { closeModal(); render(); scheduleBots(); };
     const onl = bg.querySelector('[data-act=online]'); if (onl) onl.onclick = () => { myName = bg.querySelector('#nameInput').value.trim() || 'Игрок'; try { localStorage.setItem('g108name', myName); } catch (e) {} showOnlineModal(); };
     const segOn = (id, fn) => bg.querySelectorAll(`#${id} button`).forEach(b => b.onclick = () => { bg.querySelectorAll(`#${id} button`).forEach(x => x.classList.toggle('on', x === b)); fn(b.dataset.v); });
     segOn('seg', v => { n = +v; });
@@ -2114,7 +2135,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     if (SP) SP.preload(avatarSeeds, () => render()); SFX.preload();
     if (!prev) { applyScene(true); deckNow = null; applyDeck(); trackGameStart(); }
     if (!prev || !b || G.round !== b.round) { Object.keys(moods).forEach(k => delete moods[k]); closeModal(); lastHandIds = new Set(); SFX.play('shuffle'); animateDeal(); return; }
-    closeModal(); render(); reactToDiff(b); animateDiff(b);
+    closeAutoModal(); render(); reactToDiff(b); animateDiff(b);
   }
   function showOnlineModal(err) {
     const q = new URLSearchParams(location.search).get('room') || '';
@@ -2181,7 +2202,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     applyScene(true, daily ? SCENES[Math.abs(dseed) % SCENES.length][0] : null);
     deckNow = null; applyDeck(); trackGameStart();
     if (daily) setTimeout(() => toast('🗓', `Партия дня · ${dayLabel(daily)}`, 'Первая раздача сегодня у всех одна — сравните результат с друзьями', 'ach'), 600);
-    setTimeout(() => coach('welcome'), 900);
+    coach('welcome');                                   // первой в очереди; покажется, когда закроется стартовый экран
     if (sprites) {
       avatarSeeds = seeds;
       SP.preload(avatarSeeds, () => render());
@@ -2211,7 +2232,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     if (!G || NET.online) return;
     const p = G.players[G.current];
     if (!ACTIVE.has(G.phase) || !p.isBot) return;
-    botTimer = setTimeout(() => { act(() => E.botAction(G)).then(scheduleBots); }, (G.phase === 'play' ? 800 : 500) * SPD());
+    botTimer = setTimeout(() => { if (userModalOpen()) { scheduleBots(); return; } act(() => E.botAction(G)).then(scheduleBots); }, (G.phase === 'play' ? 800 : 500) * SPD());
   }
 
   // ---------- события ----------
@@ -2231,7 +2252,10 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     CAP.App.addListener('backButton', () => {
       const mb = document.querySelector('.modal-bg');
       if (mb) {
-        if (mb.querySelector('#nameInput')) { CAP.App.exitApp(); return; }                 // стартовый экран — выходим
+        if (mb.dataset.kind === 'start') {                                                    // главное меню: к игре или выход
+          const rs = mb.querySelector('[data-act=resume]'); if (rs) rs.click(); else CAP.App.exitApp();
+          return;
+        }
         const c = mb.querySelector('[data-act=close], [data-act=back]');
         if (c) c.click(); else if (!mb.dataset.auto) closeModal();
         return;
@@ -2255,7 +2279,7 @@ table.score .note { color: #6b6878; font-size: 12px; font-weight: 600; }
     if (e.target.closest('[data-emo-toggle]')) { emoOpen = !emoOpen; render(); return; }
     const b = e.target.closest('[data-emo]'); if (b) sendEmo(b.dataset.emo);
   });
-  $('btnNew').onclick = () => { if (NET.online) { if (confirm('Выйти из онлайн-комнаты?')) { NET.leave(); showStart(); } } else showStart(); };
+  $('btnNew').onclick = () => goHome();
   $('btnLog').onclick = () => G && showLogModal();
   const syncSoundBtn = () => { $('btnSound').textContent = settings.sound ? '🔊' : '🔇'; $('btnSound').title = settings.sound ? 'Звук включён' : 'Звук выключен'; };
   $('btnSound').onclick = () => { settings.sound = !settings.sound; saveSettings(); syncSoundBtn(); SFX.warm(); SFX.play('click'); };
